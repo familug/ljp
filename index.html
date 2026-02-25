@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JLPT N3/N2 Kanji Trainer</title>
+    <meta
+      name="description"
+      content="Learn JLPT N3 and N2 kanji with readings, examples, and text-to-speech."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="app-header__titles">
+        <h1 class="app-title">JLPT N3/N2 Kanji Trainer</h1>
+        <p class="app-subtitle">Focused kanji practice with readings, examples, and TTS.</p>
+      </div>
+      <div class="header-controls" aria-label="Display and filter controls">
+        <label class="control control--inline">
+          <span class="control__label">JLPT level</span>
+          <select id="level-select" class="control__input" aria-label="Select JLPT level">
+            <option value="N3" selected>N3</option>
+            <option value="N2">N2</option>
+            <option value="ALL">N3 + N2</option>
+          </select>
+        </label>
+
+        <button
+          id="theme-toggle"
+          class="button button--ghost"
+          type="button"
+          aria-label="Toggle dark mode"
+        >
+          🌙
+        </button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="card" aria-live="polite">
+        <header class="card__header">
+          <div class="card__level" id="card-level"></div>
+          <div class="card__index" id="card-index"></div>
+        </header>
+
+        <div class="card__kanji-row">
+          <div class="card__kanji" id="card-kanji" aria-label="Current kanji"></div>
+          <div class="card__actions">
+            <button
+              id="speak-kanji"
+              class="button button--icon"
+              type="button"
+              aria-label="Speak kanji reading"
+            >
+              🔊
+            </button>
+          </div>
+        </div>
+
+        <div class="card__body">
+          <div class="card__section">
+            <div class="card__section-header">
+              <h2 class="card__section-title">Readings</h2>
+              <button
+                id="toggle-readings"
+                class="button button--small button--ghost"
+                type="button"
+              >
+                Reveal
+              </button>
+            </div>
+            <div class="card__section-content card__section-content--hidden" id="card-readings">
+              <!-- filled by JS -->
+            </div>
+          </div>
+
+          <div class="card__section">
+            <div class="card__section-header">
+              <h2 class="card__section-title">Meaning</h2>
+            </div>
+            <div class="card__section-content" id="card-meanings"></div>
+          </div>
+
+          <div class="card__section">
+            <div class="card__section-header">
+              <h2 class="card__section-title">Example</h2>
+              <div class="card__actions">
+                <button
+                  id="speak-example"
+                  class="button button--icon"
+                  type="button"
+                  aria-label="Speak example sentence"
+                >
+                  🔊
+                </button>
+              </div>
+            </div>
+            <div class="card__section-content" id="card-example-sentence"></div>
+            <div class="card__section-content card__section-content--muted" id="card-example-reading"></div>
+            <div class="card__section-content card__section-content--muted" id="card-example-translation"></div>
+          </div>
+        </div>
+
+        <footer class="card__footer">
+          <div class="card__footer-left">
+            <button id="mark-unknown" class="button button--secondary" type="button">
+              Don&apos;t know yet
+            </button>
+            <button id="mark-known" class="button button--primary" type="button">
+              I know this
+            </button>
+          </div>
+          <div class="card__footer-right">
+            <div class="stats" aria-label="Progress statistics">
+              <span id="stats-seen"></span>
+              <span id="stats-known"></span>
+            </div>
+            <button id="next-card" class="button button--ghost" type="button">
+              Next ⏭
+            </button>
+          </div>
+        </footer>
+      </section>
+
+      <section class="panel panel--hint">
+        <h2 class="panel__title">How to use</h2>
+        <ul class="panel__list">
+          <li>Choose **N3** or **N2** in the level dropdown.</li>
+          <li>Look at the kanji, try to recall readings and meaning, then press **Reveal**.</li>
+          <li>Use **I know this** / **Don&apos;t know yet** to track your progress.</li>
+          <li>Press the **speaker icons** to hear the kanji or example sentence with device TTS.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Built as a static app for GitHub Pages. TTS availability depends on your browser and OS.
+      </p>
+    </footer>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
+

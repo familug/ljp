@@ -1,0 +1,22 @@
+{
+  "name": "kanji-n3-n2-trainer",
+  "version": "1.0.0",
+  "description": "A JLPT N3/N2 kanji learning web app designed for GitHub Pages, with functional core, imperative shell, and basic tests.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun tests/core.test.js"
+  },
+  "keywords": [
+    "kanji",
+    "JLPT",
+    "N3",
+    "N2",
+    "Japanese",
+    "TTS",
+    "webapp"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {}
+}
