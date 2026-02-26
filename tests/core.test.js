@@ -27,7 +27,10 @@ function testCreateSessionDefaults() {
   const session = createSession(ALL_KANJI);
   assert.equal(session.filter.levels[0], 'N3', 'Default level should be N3');
   assert.ok(session.pool.length > 0, 'Session pool should not be empty');
-  assert.equal(session.currentIndex, 0, 'Current index should start at 0');
+  assert.ok(
+    session.currentIndex >= 0 && session.currentIndex < session.pool.length,
+    'Current index should be within pool bounds'
+  );
   assert.equal(session.stats.seen, 0);
   assert.equal(session.stats.known, 0);
   assert.equal(session.stats.unknown, 0);

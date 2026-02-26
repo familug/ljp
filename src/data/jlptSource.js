@@ -1,6 +1,8 @@
 const SOURCE_URL = 'https://raw.githubusercontent.com/davidluzgouveia/kanji-data/master/kanji.json';
 
 function jlptNumberToLevel(jlptNew) {
+  if (jlptNew === 5) return 'N5';
+  if (jlptNew === 4) return 'N4';
   if (jlptNew === 3) return 'N3';
   if (jlptNew === 2) return 'N2';
   return null;
@@ -23,7 +25,7 @@ function buildExample(kanji, onyomi, kunyomi) {
   };
 }
 
-export async function loadJlptKanji(levels = ['N3', 'N2']) {
+export async function loadJlptKanji(levels = ['N5', 'N4', 'N3', 'N2']) {
   const response = await fetch(SOURCE_URL);
   if (!response.ok) {
     throw new Error(`Failed to fetch JLPT kanji data: ${response.status}`);

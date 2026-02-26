@@ -4,11 +4,11 @@ JLPTKanjiTrainerAgent – Agent Notes
 Agent identity
 --------------
 - **Canonical agent name**: `JLPTKanjiTrainerAgent`
-- **Scope**: Static web app for JLPT N3/N2 kanji study.
+- **Scope**: Static web app for JLPT N5–N2 kanji study.
 
 Purpose
 -------
-- Static JLPT kanji trainer (N3 and N2 focus).
+- Static JLPT kanji trainer (N5–N2 focus).
 - Designed to run on GitHub Pages or any static HTTP server.
 - Emphasizes **functional core, imperative shell**, minimal tooling, pure ES modules.
 
@@ -39,7 +39,11 @@ High-level architecture
 - `src/data/jlptSource.js`
   - Fetches the public kanji dataset from:
     - `https://raw.githubusercontent.com/davidluzgouveia/kanji-data/master/kanji.json`
-  - Filters entries by `jlpt_new` (3 → N3, 2 → N2) and maps them into the internal kanji shape used by the app.
+  - Filters entries by `jlpt_new` and maps them into JLPT levels:
+    - `jlpt_new = 5` → `N5`
+    - `jlpt_new = 4` → `N4`
+    - `jlpt_new = 3` → `N3`
+    - `jlpt_new = 2` → `N2`
   - Auto-generates a simple example sentence for each kanji:
     - Sentence: `KANJIの意味を勉強します。`
     - Reading: primary reading (kun or on) + `の いみ を べんきょう します。`
@@ -56,7 +60,7 @@ High-level architecture
     - `getAccuracy(state)` → `0–100` number.
   - State shape:
     - `pool`: current kanji list (filtered by levels).
-    - `currentIndex`: index into `pool` or `-1` if empty.
+    - `currentIndex`: index into `pool` or `-1` if empty (randomized on session start).
     - `revealed`: boolean (controls readings visibility).
     - `stats`: `{ seen, known, unknown }`.
     - `history`: array of `{ id, level, result }` for each answered card.
@@ -82,9 +86,12 @@ High-level architecture
         - Uses `SpeechSynthesisUtterance`; cancels any ongoing utterance before speaking.
     - Levels:
       - `levelsFromSelectValue(value)`:
-        - `'ALL'` → `['N3', 'N2']`.
-        - `'N2'` → `['N2']`.
-        - Default → `['N3']`.
+        - `'N5'` → `['N5']`
+        - `'N4'` → `['N4']`
+        - `'N3'` → `['N3']`
+        - `'N2'` → `['N2']`
+        - `'N5-N3'` → `['N5', 'N4', 'N3']`
+        - `'ALL'` → `['N5', 'N4', 'N3', 'N2']`
     - State + rendering:
       - On bootstrap:
         - `const initialLevels = levelsFromSelectValue(levelSelect?.value ?? 'N3');`

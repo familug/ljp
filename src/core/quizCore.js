@@ -10,10 +10,11 @@ export function filterByLevels(allKanji, levels) {
 export function createSession(allKanji, options = {}) {
   const levels = options.levels && options.levels.length ? options.levels : DEFAULT_LEVELS;
   const pool = filterByLevels(allKanji, levels);
+  const startIndex = pool.length ? Math.floor(Math.random() * pool.length) : -1;
 
   return {
     pool,
-    currentIndex: pool.length ? 0 : -1,
+    currentIndex: startIndex,
     revealed: false,
     stats: {
       seen: 0,

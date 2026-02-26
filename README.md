@@ -1,11 +1,11 @@
-## Kanji N3/N2 Trainer
+## Kanji N5–N2 Trainer
 
-A small, static web app to practice **JLPT N3 and N2 kanji**.  
+A small, static web app to practice **JLPT N5–N2 kanji**.  
 Runs entirely in the browser and is suitable for **GitHub Pages** deployment.
 
 ### Features
 
-- **JLPT N3 & N2 focus** using an external, open kanji dataset
+- **JLPT N5–N2 coverage** using an external, open kanji dataset
 - **Per-kanji details**: readings, meanings, and an auto-generated example sentence
 - **Device text-to-speech (TTS)** using the browser's Speech Synthesis API
 - **Progress persistence**: known/unknown stats and per-kanji results saved in `localStorage`
@@ -45,7 +45,7 @@ Runs entirely in the browser and is suitable for **GitHub Pages** deployment.
 
    On first load, the app will fetch the **full kanji dataset** from  
    `https://raw.githubusercontent.com/davidluzgouveia/kanji-data/master/kanji.json`  
-   and filter it down to **JLPT N3 and N2** entries.
+   and filter it down to **JLPT N5–N2** entries (N5, N4, N3, N2).
 
 ### Deploying to GitHub Pages
 
@@ -67,11 +67,6 @@ Runs entirely in the browser and is suitable for **GitHub Pages** deployment.
 
 ### Extending the kanji list
 
-- Add more entries in `src/core/kanjiData.js`.
-- Each kanji can have:
-  - JLPT level (`N3` or `N2`)
-  - Kanji character
-  - Readings (on'yomi / kun'yomi)
-  - Meanings
-  - Example sentence, reading, and translation
+- The primary source is the external JLPT kanji dataset mentioned above.
+- `src/core/kanjiData.js` still contains a small inline sample list that is only used as a **fallback** when the external dataset cannot be loaded.
 

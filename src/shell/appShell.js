@@ -56,8 +56,12 @@ function createTtsApi(win) {
 }
 
 function levelsFromSelectValue(value) {
-  if (value === 'ALL') return ['N3', 'N2'];
+  if (value === 'N5') return ['N5'];
+  if (value === 'N4') return ['N4'];
+  if (value === 'N3') return ['N3'];
   if (value === 'N2') return ['N2'];
+  if (value === 'N5-N3') return ['N5', 'N4', 'N3'];
+  if (value === 'ALL') return ['N5', 'N4', 'N3', 'N2'];
   return ['N3'];
 }
 
