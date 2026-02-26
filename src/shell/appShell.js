@@ -7,6 +7,7 @@ import {
   advance,
   getAccuracy
 } from '../core/quizCore.js';
+import { createInitialSrsState, updateSrsState, normalizeSrsState } from '../core/srs.js';
 
 const PROGRESS_KEY = 'jlpt-kanji-progress-v1';
 
@@ -173,6 +174,30 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     return pool[currentIndex];
   }
 
+  function pickNextIndex(currentState, nowMs = Date.now()) {
+    const { pool } = currentState;
+    if (!pool.length) return -1;
+    const now = nowMs;
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
+    const cards = pool.map((k, index) => {
+      const entry = perKanjiProgress[k.id] || {};
+      const normalized = normalizeSrsState(entry, now);
+      return {
+        index,
+        dueMs: normalized.due
+      };
+    });
+
+    const due = cards.filter((c) => !c.dueMs || c.dueMs <= now);
+    const source = due.length ? due : cards;
+    const minDue = Math.min(...source.map((c) => c.dueMs || now));
+    const windowLimit = minDue + DAY_MS;
+    const windowCards = source.filter((c) => (c.dueMs || now) <= windowLimit);
+    const chosen = windowCards[Math.floor(Math.random() * windowCards.length)];
+    return chosen.index;
+  }
+
   const persisted = loadPersistedProgress();
   if (persisted && persisted.stats) {
     state = {
@@ -284,6 +309,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   if (markKnownBtn) {
     markKnownBtn.addEventListener('click', () => {
       const answered = getCurrentKanji(state);
+      const now = Date.now();
       state = markKnown(state);
       if (answered && answered.id) {
         const prev = perKanjiProgress[answered.id] || {
@@ -292,17 +318,33 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
           unknown: 0,
           lastResult: null
         };
+        const srsPrev = {
+          interval: prev.interval,
+          repetitions: prev.repetitions,
+          ease: prev.ease,
+          due: prev.due,
+          lastReviewed: prev.lastReviewed
+        };
+        const srsNext = updateSrsState(srsPrev, 'good', now);
         perKanjiProgress = {
           ...perKanjiProgress,
           [answered.id]: {
             seen: prev.seen + 1,
             known: prev.known + 1,
             unknown: prev.unknown,
-            lastResult: 'known'
+            lastResult: 'known',
+            ...srsNext
           }
         };
       }
       savePersistedProgress();
+      const nextIdx = pickNextIndex(state, now);
+      if (nextIdx >= 0) {
+        state = {
+          ...state,
+          currentIndex: nextIdx
+        };
+      }
       render(state);
     });
   }
@@ -310,6 +352,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   if (markUnknownBtn) {
     markUnknownBtn.addEventListener('click', () => {
       const answered = getCurrentKanji(state);
+      const now = Date.now();
       state = markUnknown(state);
       if (answered && answered.id) {
         const prev = perKanjiProgress[answered.id] || {
@@ -318,24 +361,48 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
           unknown: 0,
           lastResult: null
         };
+        const srsPrev = {
+          interval: prev.interval,
+          repetitions: prev.repetitions,
+          ease: prev.ease,
+          due: prev.due,
+          lastReviewed: prev.lastReviewed
+        };
+        const srsNext = updateSrsState(srsPrev, 'again', now);
         perKanjiProgress = {
           ...perKanjiProgress,
           [answered.id]: {
             seen: prev.seen + 1,
             known: prev.known,
             unknown: prev.unknown + 1,
-            lastResult: 'unknown'
+            lastResult: 'unknown',
+            ...srsNext
           }
         };
       }
       savePersistedProgress();
+      const nextIdx = pickNextIndex(state, now);
+      if (nextIdx >= 0) {
+        state = {
+          ...state,
+          currentIndex: nextIdx
+        };
+      }
       render(state);
     });
   }
 
   if (nextCardBtn) {
     nextCardBtn.addEventListener('click', () => {
-      state = advance(state);
+      const now = Date.now();
+      const nextIdx = pickNextIndex(state, now);
+      if (nextIdx >= 0) {
+        state = {
+          ...state,
+          currentIndex: nextIdx,
+          revealed: false
+        };
+      }
       render(state);
     });
   }

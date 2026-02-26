@@ -48,6 +48,9 @@ High-level architecture
     - Sentence: `KANJIの意味を勉強します。`
     - Reading: primary reading (kun or on) + `の いみ を べんきょう します。`
     - Translation: `"I study the meaning of KANJI."`
+- `src/data/exampleOverrides.js`
+  - Contains hand-crafted example sentences, readings, and translations for selected kanji.
+  - `jlptSource.buildExample` checks this map first; if an entry exists, it is used instead of the generic template.
 - `src/core/quizCore.js` (functional core)
   - Pure logic; **no DOM, no browser APIs**.
   - Key exports:
@@ -122,6 +125,7 @@ Testing and red/green flow
 - Test runner is intentionally minimal and focused on the **functional core**, not the DOM.
 - File: `tests/core.test.js`.
 - Uses Node’s built-in `assert/strict` and ES modules.
+- For any new feature or non-trivial behavior change, **add at least three focused tests** that describe the new behavior (happy path, edge cases, and failure/negative case where applicable).
 - Tests cover:
   - `filterByLevels` (N3 vs N2 vs both).
   - `createSession` defaults (N3, stats, revealed flag, index).
@@ -130,9 +134,12 @@ Testing and red/green flow
   - `setLevels` to ensure pool switches to N2 correctly.
   - `advance` leaving stats unchanged while moving index.
 - Command:
-  - Preferred: `bun tests/core.test.js` (or `bun run test`).
-  - Fallback: `node tests/core.test.js` if Bun is unavailable.
-- When changing core behavior (e.g. stats, levels, randomization rules), **update tests first, then core** to preserve red/green discipline.
+  - Preferred: **Bun**: `bun tests/core.test.js` (or `bun run test`); always prefer Bun over Node when available.
+  - Fallback: **Node**: `node tests/core.test.js` only if Bun is unavailable.
+- When changing core behavior (e.g. stats, levels, randomization rules), **follow a strict red/green/refactor loop**:
+  - Write or update tests first so they fail (red).
+  - Implement the minimal code change to make them pass (green).
+  - Refactor while keeping all tests green.
 
 Running locally
 ---------------

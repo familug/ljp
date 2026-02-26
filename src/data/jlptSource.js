@@ -1,3 +1,5 @@
+import { EXAMPLE_OVERRIDES } from './exampleOverrides.js';
+
 const SOURCE_URL = 'https://raw.githubusercontent.com/davidluzgouveia/kanji-data/master/kanji.json';
 
 function jlptNumberToLevel(jlptNew) {
@@ -9,6 +11,11 @@ function jlptNumberToLevel(jlptNew) {
 }
 
 function buildExample(kanji, onyomi, kunyomi) {
+  const override = EXAMPLE_OVERRIDES[kanji];
+  if (override) {
+    return override;
+  }
+
   const reading =
     (Array.isArray(kunyomi) && kunyomi[0]) ||
     (Array.isArray(onyomi) && onyomi[0]) ||

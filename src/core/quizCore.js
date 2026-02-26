@@ -77,11 +77,9 @@ function nextIndex(pool, currentIndex) {
 function recordResult(state, kind) {
   if (!state.pool.length || state.currentIndex < 0) return state;
   const current = state.pool[state.currentIndex];
-  const next = nextIndex(state.pool, state.currentIndex);
 
   return {
     ...state,
-    currentIndex: next,
     revealed: false,
     stats: {
       seen: state.stats.seen + 1,
