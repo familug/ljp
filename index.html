@@ -13,12 +13,14 @@
   <body>
     <header class="app-header">
       <div class="app-header__titles">
-        <h1 class="app-title">JLPT N5–N2 Kanji Trainer</h1>
+        <h1 class="app-title" aria-label="JLPT Kanji Trainer">
+          🧑‍🎓 🇯🇵
+        </h1>
         <p class="app-subtitle">Focused kanji practice with readings, examples, and TTS.</p>
       </div>
       <div class="header-controls" aria-label="Display and filter controls">
         <label class="control control--inline">
-          <span class="control__label">JLPT level</span>
+          <span class="control__label control__label--sr-only">JLPT level</span>
           <select id="level-select" class="control__input" aria-label="Select JLPT level">
             <option value="N3" selected>N3</option>
             <option value="N2">N2</option>
