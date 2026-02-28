@@ -179,7 +179,6 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   const writeClearBtn = doc.getElementById('write-clear');
   const writeCheckBtn = doc.getElementById('write-check');
   const writeFeedback = doc.getElementById('write-feedback');
-  const writeScore = doc.getElementById('write-score');
 
   initTheme(win, doc, themeToggle);
 
@@ -638,14 +637,27 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       let drawing = false;
       let hasInk = false;
 
+      function drawGuideKanji() {
+        const current = getCurrentKanji(state);
+        if (!current?.kanji) return;
+        ctx.save();
+        ctx.fillStyle = 'rgba(249, 250, 251, 0.22)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '140px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        if (typeof ctx.filter !== 'undefined') {
+          ctx.filter = 'blur(4px)';
+        }
+        ctx.fillText(current.kanji, size / 2, size / 2);
+        ctx.restore();
+      }
+
       clearWriteCanvas = function clearWriteCanvasImpl() {
         ctx.fillStyle = '#020617';
         ctx.fillRect(0, 0, size, size);
+        drawGuideKanji();
         writeFeedback.textContent = '';
         hasInk = false;
-        if (writeScore) {
-          writeScore.textContent = '';
-        }
       };
 
       clearWriteCanvas();
@@ -761,32 +773,29 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
 
         const normalized = energy > 0 ? error / energy : Infinity;
 
-        if (writeScore) {
-          let scoreValue;
-          if (!isFinite(normalized)) {
-            scoreValue = 0;
-          } else {
-            const maxN = 3;
-            const clamped = Math.min(normalized, maxN);
-            scoreValue = Math.round(((maxN - clamped) / maxN) * 100);
-            if (scoreValue < 0) scoreValue = 0;
-            if (scoreValue > 100) scoreValue = 100;
-          }
-          writeScore.textContent = `Stroke score: ${scoreValue}/100`;
+        let scoreValue;
+        if (!isFinite(normalized)) {
+          scoreValue = 0;
+        } else {
+          const maxN = 3;
+          const clamped = Math.min(normalized, maxN);
+          scoreValue = Math.round(((maxN - clamped) / maxN) * 100);
+          if (scoreValue < 0) scoreValue = 0;
+          if (scoreValue > 100) scoreValue = 100;
         }
 
+        let qualText;
         if (!isFinite(normalized)) {
-          writeFeedback.textContent =
-            'Draw using more of the box and with a solid stroke, then try again.';
+          qualText = 'Draw using more of the box and with a solid stroke, then try again.';
         } else if (normalized < 1.2) {
-          writeFeedback.textContent = 'Looks very close – great job!';
+          qualText = 'Looks very close – great job!';
         } else if (normalized < 2.5) {
-          writeFeedback.textContent =
-            'Close enough. The overall shape is similar – good practice.';
+          qualText = 'Close enough. The overall shape is similar – good practice.';
         } else {
-          writeFeedback.textContent =
+          qualText =
             'This looks quite different from the printed kanji. Try to center it and use more of the box.';
         }
+        writeFeedback.textContent = `Stroke score: ${scoreValue}/100. ${qualText}`;
       }
 
       writeCheckBtn.addEventListener('click', scoreAgainstCurrentKanji);
@@ -798,7 +807,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       const current = getCurrentKanji(state);
       if (!current) return;
       writing = !writing;
-      if (!writing && clearWriteCanvas) {
+      if (clearWriteCanvas) {
         clearWriteCanvas();
       }
       if (!writing) {

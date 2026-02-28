@@ -176,10 +176,6 @@
                 >
                   Clear
                 </button>
-                <button id="write-check" class="button button--small button--ghost" type="button">
-                  Check
-                </button>
-                <span id="write-score" class="write-score" aria-live="polite"></span>
               </div>
             </div>
             <div id="write-section" class="card__section-body card__section-body--hidden">
@@ -190,9 +186,13 @@
                   aria-label="Draw this kanji"
                 ></canvas>
               </div>
+              <button id="write-check" class="button button--primary write-check-btn" type="button">
+                Check
+              </button>
               <div
                 id="write-feedback"
                 class="card__section-content card__section-content--muted"
+                aria-live="polite"
               ></div>
             </div>
           </div>

@@ -412,10 +412,9 @@ html[data-theme='light'] .card__section {
   line-height: 1.5;
 }
 
-.write-score {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  margin-left: 0.4rem;
+.write-check-btn {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .kana-table {
