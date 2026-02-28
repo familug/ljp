@@ -41,7 +41,9 @@ export function setLevels(state, allKanji, levels) {
   const base = createSession(allKanji, { levels: normalized });
   return {
     ...base,
-    pool
+    pool,
+    stats: state.stats,
+    history: state.history
   };
 }
 

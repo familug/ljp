@@ -74,6 +74,20 @@ function testSetLevelsChangesPool() {
   assert.ok(state.pool.every((k) => k.level === 'N2'), 'All kanji should now be N2');
 }
 
+function testSetLevelsPreservesStats() {
+  let state = createSession(ALL_KANJI, { levels: ['N3'] });
+  state = markKnown(state);
+  state = markUnknown(state);
+  assert.equal(state.stats.seen, 2);
+  assert.equal(state.stats.known, 1);
+  state = setLevels(state, ALL_KANJI, ['N5']);
+  assert.equal(state.stats.seen, 2, 'stats.seen should be preserved');
+  assert.equal(state.stats.known, 1, 'stats.known should be preserved');
+  state = setLevels(state, ALL_KANJI, ['N3']);
+  assert.equal(state.stats.seen, 2, 'stats.seen should still be preserved');
+  assert.equal(state.stats.known, 1, 'stats.known should still be preserved');
+}
+
 function testAdvanceDoesNotChangeStats() {
   let state = createSession(ALL_KANJI);
   const originalIndex = state.currentIndex;
@@ -134,6 +148,7 @@ const tests = [
   ['reveal toggle', testRevealToggle],
   ['markKnown / markUnknown / accuracy', testMarkKnownUnknownAndAccuracy],
   ['setLevels', testSetLevelsChangesPool],
+  ['setLevels preserves stats', testSetLevelsPreservesStats],
   ['advance stats', testAdvanceDoesNotChangeStats],
   ['normalizeLevelPreference valid values', testNormalizeLevelPreferenceValidValues],
   ['normalizeLevelPreference invalid or empty', testNormalizeLevelPreferenceInvalidOrEmpty],
