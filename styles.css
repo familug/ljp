@@ -95,6 +95,11 @@ html[data-theme='light'] .app-header {
   letter-spacing: 0.03em;
 }
 
+.app-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .app-subtitle {
   margin: 0;
   font-size: 0.85rem;
@@ -105,6 +110,10 @@ html[data-theme='light'] .app-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.app-header__menu {
+  display: inline-flex;
 }
 
 @media (max-width: 640px) {
@@ -141,6 +150,14 @@ html[data-theme='light'] .app-header {
   width: 100%;
 }
 
+.app-view {
+  width: 100%;
+}
+
+.app-view--hidden {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .app-main {
     padding: 0.5rem 0.5rem 0.75rem;
@@ -153,6 +170,70 @@ html[data-theme='light'] .app-header {
   font-size: 0.8rem;
   color: var(--color-text-muted);
   text-align: center;
+}
+
+.build-meta {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  opacity: 0.9;
+}
+
+.nav-drawer {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  display: none;
+  z-index: 30;
+}
+
+.nav-drawer__panel {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  min-width: 200px;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid rgba(148, 119, 80, 0.7);
+  box-shadow: var(--shadow-soft);
+}
+
+.nav-drawer__close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+}
+
+.nav-drawer__list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.nav-drawer__link {
+  width: 100%;
+  text-align: left;
+  border-radius: var(--radius-md);
+  border: none;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.85rem;
+  background-color: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.nav-drawer__link[aria-current='page'] {
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.nav-drawer--open {
+  display: block;
 }
 
 .card {
@@ -225,6 +306,10 @@ html[data-theme='light'] .card__level {
   letter-spacing: 0.08em;
 }
 
+.card__kanji--hidden {
+  visibility: hidden;
+}
+
 .card__actions {
   display: flex;
   gap: 0.4rem;
@@ -266,6 +351,75 @@ html[data-theme='light'] .card__section {
 .card__section-content {
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+.card__section-body {
+  margin-top: 0.25rem;
+}
+
+.card__section-body--hidden {
+  display: none;
+}
+
+.card__section-body--visible {
+  display: block;
+}
+
+.draw-canvas-wrapper {
+  margin-top: 0.5rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border-subtle);
+  padding: 0.4rem;
+  background-color: rgba(15, 23, 42, 0.8);
+}
+
+.draw-canvas {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1 / 1;
+  display: block;
+  margin: 0 auto;
+  touch-action: none;
+}
+
+.draw-controls {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.draw-results__list {
+  padding-left: 1.2rem;
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.write-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.kana-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.kana-table th,
+.kana-table td {
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.2rem 0.25rem;
+  text-align: center;
+}
+
+.kana-table th[scope='row'] {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  min-width: 1.5rem;
 }
 
 .card__section-content--muted {

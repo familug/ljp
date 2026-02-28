@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kana Basics – JLPT Kanji Trainer</title>
+    <meta
+      name="description"
+      content="Learn basic Japanese hiragana and katakana, designed for complete beginners."
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="app-header__titles">
+        <h1 class="app-title">
+          <a href="/" aria-label="JLPT Kanji Trainer home">
+            🧑‍🎓 🇯🇵
+          </a>
+        </h1>
+        <p class="app-subtitle">Kana basics for complete beginners.</p>
+      </div>
+      <div class="header-controls" aria-label="Display and filter controls">
+        <button
+          id="nav-toggle"
+          class="button button--icon button--ghost app-header__menu"
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+        >
+          ☰
+        </button>
+
+        <button
+          id="theme-toggle"
+          class="button button--ghost"
+          type="button"
+          aria-label="Toggle dark mode"
+        >
+          🌙
+        </button>
+      </div>
+    </header>
+
+    <nav id="nav-drawer" class="nav-drawer" aria-label="Main navigation">
+      <div class="nav-drawer__panel">
+        <button
+          id="nav-close"
+          class="nav-drawer__close button button--icon button--ghost"
+          type="button"
+          aria-label="Close navigation"
+        >
+          ×
+        </button>
+        <ul class="nav-drawer__list">
+          <li>
+            <a href="/" class="nav-drawer__link">Kanji trainer</a>
+          </li>
+          <li>
+            <a href="/kana/" class="nav-drawer__link" aria-current="page">Kana basics</a>
+          </li>
+          <li>
+            <a href="/draw/" class="nav-drawer__link">Draw kanji</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="app-main">
+      <section
+        id="view-kana"
+        class="app-view"
+        aria-label="Hiragana and Katakana basics"
+      >
+        <section class="card" aria-live="polite">
+          <header class="card__header">
+            <div class="card__level">Getting started</div>
+            <div class="card__index">Hiragana &amp; Katakana</div>
+          </header>
+
+          <div class="card__body">
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">What are kana?</h2>
+              </div>
+              <div class="card__section-content">
+                <p>
+                  Japanese uses two basic sound alphabets (kana): <strong>hiragana</strong> and
+                  <strong>katakana</strong>. Each symbol represents a simple sound like
+                  <em>ka</em>, <em>to</em>, or <em>mi</em>.
+                </p>
+                <p>
+                  <strong>Hiragana</strong> is used for native Japanese words and grammar.
+                  <strong>Katakana</strong> is used mainly for foreign words, names, and emphasis.
+                </p>
+              </div>
+            </div>
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Basic vowel sounds</h2>
+              </div>
+              <div class="card__section-content">
+                <p>Start by remembering these five core sounds. They are the same in hiragana and katakana:</p>
+                <ul>
+                  <li><strong>a</strong> (あ / ア) — like “a” in “father”</li>
+                  <li><strong>i</strong> (い / イ) — like “ee” in “see”</li>
+                  <li><strong>u</strong> (う / ウ) — like “oo” in “food” (short)</li>
+                  <li><strong>e</strong> (え / エ) — like “e” in “bed”</li>
+                  <li><strong>o</strong> (お / オ) — like “o” in “go” (short)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Hiragana chart</h2>
+              </div>
+              <div class="card__section-content">
+                <p>Each column adds a consonant sound to the vowels:</p>
+                <table class="kana-table" aria-label="Hiragana chart">
+                  <thead>
+                    <tr>
+                      <th scope="col"></th>
+                      <th scope="col">∅</th>
+                      <th scope="col">k</th>
+                      <th scope="col">s</th>
+                      <th scope="col">t</th>
+                      <th scope="col">n</th>
+                      <th scope="col">h</th>
+                      <th scope="col">m</th>
+                      <th scope="col">y</th>
+                      <th scope="col">r</th>
+                      <th scope="col">w</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">a</th>
+                      <td>あ</td>
+                      <td>か</td>
+                      <td>さ</td>
+                      <td>た</td>
+                      <td>な</td>
+                      <td>は</td>
+                      <td>ま</td>
+                      <td>や</td>
+                      <td>ら</td>
+                      <td>わ</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">i</th>
+                      <td>い</td>
+                      <td>き</td>
+                      <td>し</td>
+                      <td>ち</td>
+                      <td>に</td>
+                      <td>ひ</td>
+                      <td>み</td>
+                      <td></td>
+                      <td>り</td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">u</th>
+                      <td>う</td>
+                      <td>く</td>
+                      <td>す</td>
+                      <td>つ</td>
+                      <td>ぬ</td>
+                      <td>ふ</td>
+                      <td>む</td>
+                      <td>ゆ</td>
+                      <td>る</td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">e</th>
+                      <td>え</td>
+                      <td>け</td>
+                      <td>せ</td>
+                      <td>て</td>
+                      <td>ね</td>
+                      <td>へ</td>
+                      <td>め</td>
+                      <td></td>
+                      <td>れ</td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">o</th>
+                      <td>お</td>
+                      <td>こ</td>
+                      <td>そ</td>
+                      <td>と</td>
+                      <td>の</td>
+                      <td>ほ</td>
+                      <td>も</td>
+                      <td>よ</td>
+                      <td>ろ</td>
+                      <td>を</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">n</th>
+                      <td>ん</td>
+                      <td colspan="9"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Katakana chart</h2>
+              </div>
+              <div class="card__section-content">
+                <p>The same sounds in katakana (often used for foreign words):</p>
+                <table class="kana-table" aria-label="Katakana chart">
+                  <thead>
+                    <tr>
+                      <th scope="col"></th>
+                      <th scope="col">∅</th>
+                      <th scope="col">k</th>
+                      <th scope="col">s</th>
+                      <th scope="col">t</th>
+                      <th scope="col">n</th>
+                      <th scope="col">h</th>
+                      <th scope="col">m</th>
+                      <th scope="col">y</th>
+                      <th scope="col">r</th>
+                      <th scope="col">w</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">a</th>
+                      <td>ア</td>
+                      <td>カ</td>
+                      <td>サ</td>
+                      <td>タ</td>
+                      <td>ナ</td>
+                      <td>ハ</td>
+                      <td>マ</td>
+                      <td>ヤ</td>
+                      <td>ラ</td>
+                      <td>ワ</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">i</th>
+                      <td>イ</td>
+                      <td>キ</td>
+                      <td>シ</td>
+                      <td>チ</td>
+                      <td>ニ</td>
+                      <td>ヒ</td>
+                      <td>ミ</td>
+                      <td></td>
+                      <td>リ</td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">u</th>
+                      <td>ウ</td>
+                      <td>ク</td>
+                      <td>ス</td>
+                      <td>ツ</td>
+                      <td>ヌ</td>
+                      <td>フ</td>
+                      <td>ム</td>
+                      <td>ユ</td>
+                      <td>ル</td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">e</th>
+                      <td>エ</td>
+                      <td>ケ</td>
+                      <td>セ</td>
+                      <td>テ</td>
+                      <td>ネ</td>
+                      <td>ヘ</td>
+                      <td>メ</td>
+                      <td></td>
+                      <td>レ</td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">o</th>
+                      <td>オ</td>
+                      <td>コ</td>
+                      <td>ソ</td>
+                      <td>ト</td>
+                      <td>ノ</td>
+                      <td>ホ</td>
+                      <td>モ</td>
+                      <td>ヨ</td>
+                      <td>ロ</td>
+                      <td>ヲ</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">n</th>
+                      <td>ン</td>
+                      <td colspan="9"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Built as a static app for GitHub Pages. TTS availability depends on your browser and OS.
+      </p>
+      <p id="build-meta" class="build-meta" aria-label="Build information"></p>
+    </footer>
+
+    <script type="module" src="../src/kanaMain.js"></script>
+  </body>
+</html>
+

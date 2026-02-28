@@ -13,12 +13,24 @@
   <body>
     <header class="app-header">
       <div class="app-header__titles">
-        <h1 class="app-title" aria-label="JLPT Kanji Trainer">
-          🧑‍🎓 🇯🇵
+        <h1 class="app-title">
+          <a href="/" aria-label="JLPT Kanji Trainer home">
+            🧑‍🎓 🇯🇵
+          </a>
         </h1>
         <p class="app-subtitle">Focused kanji practice with readings, examples, and TTS.</p>
       </div>
       <div class="header-controls" aria-label="Display and filter controls">
+        <button
+          id="nav-toggle"
+          class="button button--icon button--ghost app-header__menu"
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+        >
+          ☰
+        </button>
+
         <label class="control control--inline">
           <span class="control__label control__label--sr-only">JLPT level</span>
           <select id="level-select" class="control__input" aria-label="Select JLPT level">
@@ -42,7 +54,32 @@
       </div>
     </header>
 
+    <nav id="nav-drawer" class="nav-drawer" aria-label="Main navigation">
+      <div class="nav-drawer__panel">
+        <button
+          id="nav-close"
+          class="nav-drawer__close button button--icon button--ghost"
+          type="button"
+          aria-label="Close navigation"
+        >
+          ×
+        </button>
+        <ul class="nav-drawer__list">
+          <li>
+            <a href="/" class="nav-drawer__link" aria-current="page">Kanji trainer</a>
+          </li>
+          <li>
+            <a href="/kana/" class="nav-drawer__link">Kana basics</a>
+          </li>
+          <li>
+            <a href="/draw/" class="nav-drawer__link">Draw kanji</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
     <main class="app-main">
+      <section id="view-kanji" class="app-view" aria-label="Kanji trainer">
       <section class="card" aria-live="polite">
         <header class="card__header">
           <div class="card__level" id="card-level"></div>
@@ -66,25 +103,21 @@
         <div class="card__body">
           <div class="card__section">
             <div class="card__section-header">
-              <h2 class="card__section-title">Readings</h2>
+              <h2 class="card__section-title">Details</h2>
               <button
                 id="toggle-readings"
                 class="button button--small button--ghost"
                 type="button"
               >
-                Reveal
+                Show
               </button>
             </div>
-            <div class="card__section-content card__section-content--hidden" id="card-readings">
-              <!-- filled by JS -->
+            <div id="card-details" class="card__section-body card__section-body--hidden">
+              <div class="card__section-content" id="card-readings">
+                <!-- readings filled by JS -->
+              </div>
+              <div class="card__section-content" id="card-meanings"></div>
             </div>
-          </div>
-
-          <div class="card__section">
-            <div class="card__section-header">
-              <h2 class="card__section-title">Meaning</h2>
-            </div>
-            <div class="card__section-content" id="card-meanings"></div>
           </div>
 
           <div class="card__section">
@@ -95,15 +128,69 @@
                   id="speak-example"
                   class="button button--icon"
                   type="button"
-                  aria-label="Speak example sentence"
+                  aria-label="Speak Japanese example sentence"
                 >
                   🔊
+                </button>
+                <button
+                  id="speak-example-en"
+                  class="button button--icon"
+                  type="button"
+                  aria-label="Speak English translation"
+                >
+                  EN
                 </button>
               </div>
             </div>
             <div class="card__section-content" id="card-example-sentence"></div>
             <div class="card__section-content card__section-content--muted" id="card-example-reading"></div>
             <div class="card__section-content card__section-content--muted" id="card-example-translation"></div>
+          </div>
+
+          <div class="card__section">
+            <div class="card__section-header">
+              <h2 class="card__section-title">Write it</h2>
+              <div class="card__actions">
+                <button
+                  id="write-toggle"
+                  class="button button--small button--ghost"
+                  type="button"
+                >
+                  Write
+                </button>
+                <button
+                  id="write-peek"
+                  class="button button--small button--ghost"
+                  type="button"
+                >
+                  Peek
+                </button>
+              </div>
+            </div>
+            <div id="write-section" class="card__section-body card__section-body--hidden">
+              <p class="write-hint">
+                Draw this kanji from memory. Try to match the overall shape, then check your stroke.
+              </p>
+              <div class="draw-canvas-wrapper">
+                <canvas
+                  id="write-canvas"
+                  class="draw-canvas"
+                  aria-label="Draw this kanji"
+                ></canvas>
+              </div>
+              <div class="draw-controls">
+                <button id="write-clear" class="button button--secondary" type="button">
+                  Clear
+                </button>
+                <button id="write-check" class="button button--primary" type="button">
+                  Check stroke
+                </button>
+              </div>
+              <div
+                id="write-feedback"
+                class="card__section-content card__section-content--muted"
+              ></div>
+            </div>
           </div>
         </div>
 
@@ -137,12 +224,14 @@
           <li>Press the **speaker icons** to hear the kanji or example sentence with device TTS.</li>
         </ul>
       </section>
+      </section>
     </main>
 
     <footer class="app-footer">
       <p>
         Built as a static app for GitHub Pages. TTS availability depends on your browser and OS.
       </p>
+      <p id="build-meta" class="build-meta" aria-label="Build information"></p>
     </footer>
 
     <script type="module" src="./src/main.js"></script>

@@ -126,6 +126,7 @@ Testing and red/green flow
 - File: `tests/core.test.js`.
 - Uses Node’s built-in `assert/strict` and ES modules.
 - For any new feature or non-trivial behavior change, **add at least three focused tests** that describe the new behavior (happy path, edge cases, and failure/negative case where applicable).
+- For every behavior change, feature, or bugfix, **add or update at least one unit test** that captures the expected behavior; do not remove tests that describe real user-visible behavior unless you also update this document to explain why the behavior changed.
 - Tests cover:
   - `filterByLevels` (N3 vs N2 vs both).
   - `createSession` defaults (N3, stats, revealed flag, index).
@@ -140,6 +141,7 @@ Testing and red/green flow
   - Write or update tests first so they fail (red).
   - Implement the minimal code change to make them pass (green).
   - Refactor while keeping all tests green.
+ - Whatever you produce must be **verified before you say it works**: for core logic, this means running the test suite; for UI-only changes, at minimum load the app in a browser (dark/light theme and small screens) and confirm the behavior manually.
 
 Running locally
 ---------------
@@ -266,4 +268,5 @@ Maintenance rule for AI agents
   2. Update or extend the relevant sections so the description matches current reality.
   3. Prefer concise bullet points over long prose.
 - Treat this file as the single source of truth for future AI agents about how `JLPTKanjiTrainerAgent` is structured and meant to be used.
+ - When a change affects how users build, serve, or safely use the project (especially around data sources, persistence, or privacy), also update `README.md` with clear, factual notes so humans and future agents do not have to re-discover that knowledge.
 

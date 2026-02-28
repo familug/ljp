@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Draw Kanji – JLPT Kanji Trainer</title>
+    <meta
+      name="description"
+      content="Draw a kanji and let the trainer guess it from the JLPT N5–N2 set."
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="app-header__titles">
+        <h1 class="app-title">
+          <a href="/" aria-label="JLPT Kanji Trainer home">
+            🧑‍🎓 🇯🇵
+          </a>
+        </h1>
+        <p class="app-subtitle">Draw a character and we&apos;ll guess it.</p>
+      </div>
+      <div class="header-controls" aria-label="Display and filter controls">
+        <button
+          id="nav-toggle"
+          class="button button--icon button--ghost app-header__menu"
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+        >
+          ☰
+        </button>
+
+        <button
+          id="theme-toggle"
+          class="button button--ghost"
+          type="button"
+          aria-label="Toggle dark mode"
+        >
+          🌙
+        </button>
+      </div>
+    </header>
+
+    <nav id="nav-drawer" class="nav-drawer" aria-label="Main navigation">
+      <div class="nav-drawer__panel">
+        <button
+          id="nav-close"
+          class="nav-drawer__close button button--icon button--ghost"
+          type="button"
+          aria-label="Close navigation"
+        >
+          ×
+        </button>
+        <ul class="nav-drawer__list">
+          <li>
+            <a href="/" class="nav-drawer__link">Kanji trainer</a>
+          </li>
+          <li>
+            <a href="/kana/" class="nav-drawer__link">Kana basics</a>
+          </li>
+          <li>
+            <a href="/draw/" class="nav-drawer__link" aria-current="page">Draw kanji</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="app-main">
+      <section class="app-view" aria-label="Draw kanji">
+        <section class="card" aria-live="polite">
+          <header class="card__header">
+            <div class="card__level">Experimental</div>
+            <div class="card__index">Handwriting helper</div>
+          </header>
+
+          <div class="card__body">
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Draw your kanji</h2>
+              </div>
+              <div class="card__section-content">
+                <p>Use your mouse or finger to sketch a kanji in the box below.</p>
+                <div class="draw-canvas-wrapper">
+                  <canvas
+                    id="draw-canvas"
+                    class="draw-canvas"
+                    aria-label="Draw kanji here"
+                  ></canvas>
+                </div>
+                <div class="draw-controls">
+                  <button id="draw-clear" class="button button--secondary" type="button">
+                    Clear
+                  </button>
+                  <button id="draw-guess" class="button button--primary" type="button">
+                    Guess kanji
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Best guesses</h2>
+              </div>
+              <div class="card__section-content" id="draw-results">
+                Draw a kanji, then tap &quot;Guess kanji&quot;.
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Built as a static app for GitHub Pages. TTS availability depends on your browser and OS.
+      </p>
+      <p id="build-meta" class="build-meta" aria-label="Build information"></p>
+    </footer>
+
+    <script type="module" src="../src/drawMain.js"></script>
+  </body>
+</html>
+

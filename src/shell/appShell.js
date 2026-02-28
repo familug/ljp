@@ -16,7 +16,8 @@ function createTtsApi(win) {
     return {
       available: false,
       speakKanji: () => {},
-      speakExample: () => {}
+      speakExample: () => {},
+      speakExampleTranslation: () => {}
     };
   }
 
@@ -29,12 +30,29 @@ function createTtsApi(win) {
     return ja || voices[0];
   }
 
-  function speak(text) {
+  function pickEnglishVoice() {
+    const voices = synth.getVoices();
+    if (!voices || !voices.length) return null;
+    const en = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('en'));
+    return en || voices[0];
+  }
+
+  function speakJapanese(text) {
     if (!text) return;
     const utterance = new win.SpeechSynthesisUtterance(text);
     const voice = pickJapaneseVoice();
     if (voice) utterance.voice = voice;
     utterance.lang = (voice && voice.lang) || 'ja-JP';
+    synth.cancel();
+    synth.speak(utterance);
+  }
+
+  function speakEnglish(text) {
+    if (!text) return;
+    const utterance = new win.SpeechSynthesisUtterance(text);
+    const voice = pickEnglishVoice();
+    if (voice) utterance.voice = voice;
+    utterance.lang = (voice && voice.lang) || 'en-US';
     synth.cancel();
     synth.speak(utterance);
   }
@@ -47,11 +65,15 @@ function createTtsApi(win) {
         (kanji.kunyomi && kanji.kunyomi[0]) ||
         (kanji.onyomi && kanji.onyomi[0]) ||
         kanji.kanji;
-      speak(primaryReading);
+      speakJapanese(primaryReading);
     },
     speakExample(kanji) {
       if (!kanji || !kanji.example) return;
-      speak(kanji.example.sentence || kanji.example.reading);
+      speakJapanese(kanji.example.sentence || kanji.example.reading);
+    },
+    speakExampleTranslation(kanji) {
+      if (!kanji || !kanji.example) return;
+      speakEnglish(kanji.example.translation || '');
     }
   };
 }
@@ -66,7 +88,7 @@ function levelsFromSelectValue(value) {
   return ['N3'];
 }
 
-function initTheme(win, doc, toggleButton) {
+export function initTheme(win, doc, toggleButton) {
   const root = doc.documentElement;
   const storageKey = 'kanji-trainer-theme';
 
@@ -121,11 +143,16 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   const levelSelect = doc.getElementById('level-select');
   const themeToggle = doc.getElementById('theme-toggle');
 
+  const navToggle = doc.getElementById('nav-toggle');
+  const navDrawer = doc.getElementById('nav-drawer');
+  const navClose = doc.getElementById('nav-close');
+
   const cardLevel = doc.getElementById('card-level');
   const cardIndex = doc.getElementById('card-index');
   const cardKanji = doc.getElementById('card-kanji');
   const cardReadings = doc.getElementById('card-readings');
   const cardMeanings = doc.getElementById('card-meanings');
+  const cardDetails = doc.getElementById('card-details');
   const cardExampleSentence = doc.getElementById('card-example-sentence');
   const cardExampleReading = doc.getElementById('card-example-reading');
   const cardExampleTranslation = doc.getElementById('card-example-translation');
@@ -139,12 +166,69 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   const nextCardBtn = doc.getElementById('next-card');
   const speakKanjiBtn = doc.getElementById('speak-kanji');
   const speakExampleBtn = doc.getElementById('speak-example');
+  const speakExampleEnBtn = doc.getElementById('speak-example-en');
+
+  const writeToggleBtn = doc.getElementById('write-toggle');
+  const writePeekBtn = doc.getElementById('write-peek');
+  const writeSection = doc.getElementById('write-section');
+  const writeCanvas = doc.getElementById('write-canvas');
+  const writeClearBtn = doc.getElementById('write-clear');
+  const writeCheckBtn = doc.getElementById('write-check');
+  const writeFeedback = doc.getElementById('write-feedback');
 
   initTheme(win, doc, themeToggle);
+
+  function openNav() {
+    if (!navDrawer || !navToggle) return;
+    navDrawer.classList.add('nav-drawer--open');
+    navToggle.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeNav() {
+    if (!navDrawer || !navToggle) return;
+    navDrawer.classList.remove('nav-drawer--open');
+    navToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function toggleNav() {
+    if (!navDrawer || !navToggle) return;
+    if (navDrawer.classList.contains('nav-drawer--open')) {
+      closeNav();
+    } else {
+      openNav();
+    }
+  }
 
   const initialLevels = levelsFromSelectValue(levelSelect ? levelSelect.value : 'N3');
   let state = createSession(allKanji, { levels: initialLevels });
   let perKanjiProgress = {};
+  let detailsOpen = false;
+  let writing = false;
+  let peekKanji = false;
+  let clearWriteCanvas = null;
+
+  function updateWritingUi() {
+    if (!writeSection || !cardKanji || !writeToggleBtn) return;
+    if (writing) {
+      writeSection.classList.add('card__section-body--visible');
+      writeSection.classList.remove('card__section-body--hidden');
+      if (!peekKanji) {
+        cardKanji.classList.add('card__kanji--hidden');
+      } else {
+        cardKanji.classList.remove('card__kanji--hidden');
+      }
+      writeToggleBtn.textContent = 'Done';
+    } else {
+      writeSection.classList.add('card__section-body--hidden');
+      writeSection.classList.remove('card__section-body--visible');
+      cardKanji.classList.remove('card__kanji--hidden');
+      writeToggleBtn.textContent = 'Write';
+    }
+    if (writePeekBtn) {
+      writePeekBtn.textContent = peekKanji ? 'Hide' : 'Peek';
+      writePeekBtn.disabled = !writing;
+    }
+  }
 
   function loadPersistedProgress() {
     try {
@@ -225,11 +309,13 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     if (!tts.available) {
       speakKanjiBtn.disabled = true;
       speakExampleBtn.disabled = true;
+      if (speakExampleEnBtn) speakExampleEnBtn.disabled = true;
       speakKanjiBtn.title = 'Text-to-speech is not available in this browser.';
       speakExampleBtn.title = 'Text-to-speech is not available in this browser.';
     } else {
       speakKanjiBtn.disabled = !hasKanji;
       speakExampleBtn.disabled = !hasKanji;
+      if (speakExampleEnBtn) speakExampleEnBtn.disabled = !hasKanji;
     }
 
     if (!hasKanji) {
@@ -243,9 +329,19 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       cardExampleTranslation.textContent = '';
       statsSeen.textContent = 'Seen: 0';
       statsKnown.textContent = 'Known: 0 (0%)';
-      cardReadings.classList.add('card__section-content--visible');
-      cardReadings.classList.remove('card__section-content--hidden');
-      toggleReadingsBtn.textContent = 'Reveal';
+      detailsOpen = false;
+      writing = false;
+      if (cardDetails) {
+        cardDetails.classList.add('card__section-body--hidden');
+        cardDetails.classList.remove('card__section-body--visible');
+      }
+      if (toggleReadingsBtn) {
+        toggleReadingsBtn.textContent = 'Show';
+      }
+      if (clearWriteCanvas) {
+        clearWriteCanvas();
+      }
+      updateWritingUi();
       return;
     }
 
@@ -276,19 +372,23 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       cardExampleTranslation.textContent = '';
     }
 
-    if (currentState.revealed) {
-      cardReadings.classList.add('card__section-content--visible');
-      cardReadings.classList.remove('card__section-content--hidden');
-      toggleReadingsBtn.textContent = 'Hide';
-    } else {
-      cardReadings.classList.add('card__section-content--hidden');
-      cardReadings.classList.remove('card__section-content--visible');
-      toggleReadingsBtn.textContent = 'Reveal';
+    if (cardDetails && toggleReadingsBtn) {
+      if (detailsOpen) {
+        cardDetails.classList.add('card__section-body--visible');
+        cardDetails.classList.remove('card__section-body--hidden');
+        toggleReadingsBtn.textContent = 'Hide';
+      } else {
+        cardDetails.classList.add('card__section-body--hidden');
+        cardDetails.classList.remove('card__section-body--visible');
+        toggleReadingsBtn.textContent = 'Show';
+      }
     }
 
     const accuracy = getAccuracy(currentState);
     statsSeen.textContent = `Seen: ${currentState.stats.seen}`;
     statsKnown.textContent = `Known: ${currentState.stats.known} (${accuracy.toFixed(0)}%)`;
+
+    updateWritingUi();
   }
 
   if (levelSelect) {
@@ -301,7 +401,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
 
   if (toggleReadingsBtn) {
     toggleReadingsBtn.addEventListener('click', () => {
-      state = toggleReveal(state);
+      detailsOpen = !detailsOpen;
       render(state);
     });
   }
@@ -344,6 +444,11 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
           ...state,
           currentIndex: nextIdx
         };
+      }
+      writing = false;
+      peekKanji = false;
+      if (clearWriteCanvas) {
+        clearWriteCanvas();
       }
       render(state);
     });
@@ -388,6 +493,11 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
           currentIndex: nextIdx
         };
       }
+      writing = false;
+      peekKanji = false;
+      if (clearWriteCanvas) {
+        clearWriteCanvas();
+      }
       render(state);
     });
   }
@@ -402,6 +512,11 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
           currentIndex: nextIdx,
           revealed: false
         };
+      }
+      writing = false;
+      peekKanji = false;
+      if (clearWriteCanvas) {
+        clearWriteCanvas();
       }
       render(state);
     });
@@ -423,6 +538,196 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     });
   }
 
+  if (speakExampleEnBtn && tts.available) {
+    speakExampleEnBtn.addEventListener('click', () => {
+      const { pool, currentIndex } = state;
+      if (!pool.length || currentIndex < 0) return;
+      tts.speakExampleTranslation(pool[currentIndex]);
+    });
+  }
+
+  if (navToggle && navDrawer) {
+    navToggle.addEventListener('click', toggleNav);
+  }
+
+  if (navClose) {
+    navClose.addEventListener('click', closeNav);
+  }
+
+  if (writeCanvas && writeClearBtn && writeCheckBtn && writeFeedback) {
+    const size = 192;
+    writeCanvas.width = size;
+    writeCanvas.height = size;
+    const ctx = writeCanvas.getContext('2d');
+    if (ctx) {
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = '#f9fafb';
+
+      let drawing = false;
+      let hasInk = false;
+
+      clearWriteCanvas = function clearWriteCanvasImpl() {
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, size, size);
+        writeFeedback.textContent = '';
+        hasInk = false;
+      };
+
+      clearWriteCanvas();
+
+      function getPos(evt) {
+        const rect = writeCanvas.getBoundingClientRect();
+        const x = evt.clientX - rect.left;
+        const y = evt.clientY - rect.top;
+        const scaleX = writeCanvas.width / rect.width;
+        const scaleY = writeCanvas.height / rect.height;
+        return {
+          x: x * scaleX,
+          y: y * scaleY
+        };
+      }
+
+      writeCanvas.addEventListener('pointerdown', (evt) => {
+        drawing = true;
+        hasInk = true;
+        writeCanvas.setPointerCapture(evt.pointerId);
+        const { x, y } = getPos(evt);
+        detailsOpen = false;
+        render(state);
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      });
+
+      function stopDrawing(evt) {
+        if (!drawing) return;
+        drawing = false;
+        if (evt && writeCanvas.hasPointerCapture(evt.pointerId)) {
+          writeCanvas.releasePointerCapture(evt.pointerId);
+        }
+      }
+
+      writeCanvas.addEventListener('pointermove', (evt) => {
+        if (!drawing) return;
+        const { x, y } = getPos(evt);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      });
+      writeCanvas.addEventListener('pointerup', stopDrawing);
+      writeCanvas.addEventListener('pointercancel', stopDrawing);
+      writeCanvas.addEventListener('pointerleave', stopDrawing);
+
+      writeClearBtn.addEventListener('click', () => {
+        if (clearWriteCanvas) {
+          clearWriteCanvas();
+        }
+      });
+
+      function scoreAgainstCurrentKanji() {
+        const current = getCurrentKanji(state);
+        if (!current || !current.kanji) {
+          writeFeedback.textContent = 'No kanji selected.';
+          return;
+        }
+        if (!hasInk) {
+          writeFeedback.textContent = 'Draw the kanji above, then tap "Check stroke".';
+          return;
+        }
+
+        const targetSize = 32;
+        const tmpCanvas = doc.createElement('canvas');
+        tmpCanvas.width = targetSize;
+        tmpCanvas.height = targetSize;
+        const tmpCtx = tmpCanvas.getContext('2d');
+        if (!tmpCtx) {
+          writeFeedback.textContent = 'Drawing not supported in this browser.';
+          return;
+        }
+
+        tmpCtx.drawImage(writeCanvas, 0, 0, targetSize, targetSize);
+        const userImage = tmpCtx.getImageData(0, 0, targetSize, targetSize);
+        const userData = userImage.data;
+
+        const glyphCanvas = doc.createElement('canvas');
+        glyphCanvas.width = targetSize;
+        glyphCanvas.height = targetSize;
+        const glyphCtx = glyphCanvas.getContext('2d');
+        if (!glyphCtx) {
+          writeFeedback.textContent = 'Drawing not supported in this browser.';
+          return;
+        }
+
+        glyphCtx.fillStyle = '#020617';
+        glyphCtx.fillRect(0, 0, targetSize, targetSize);
+        glyphCtx.fillStyle = '#f9fafb';
+        glyphCtx.textAlign = 'center';
+        glyphCtx.textBaseline = 'middle';
+        glyphCtx.font =
+          '26px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        glyphCtx.fillText(current.kanji, targetSize / 2, targetSize / 2);
+
+        const glyphImage = glyphCtx.getImageData(0, 0, targetSize, targetSize);
+        const glyphData = glyphImage.data;
+
+        let error = 0;
+        let energy = 0;
+        for (let i = 0; i < userData.length; i += 4) {
+          const ur = userData[i];
+          const ug = userData[i + 1];
+          const ub = userData[i + 2];
+          const gr = glyphData[i];
+          const gg = glyphData[i + 1];
+          const gb = glyphData[i + 2];
+          const u = (ur + ug + ub) / (3 * 255);
+          const g = (gr + gg + gb) / (3 * 255);
+          const diff = u - g;
+          error += diff * diff;
+          energy += u * u;
+        }
+
+        const normalized = energy > 0 ? error / energy : Infinity;
+
+        if (!isFinite(normalized)) {
+          writeFeedback.textContent =
+            'Draw using more of the box and with a solid stroke, then try again.';
+        } else if (normalized < 1.2) {
+          writeFeedback.textContent = 'Looks very close – great job!';
+        } else if (normalized < 2.5) {
+          writeFeedback.textContent =
+            'Close enough. The overall shape is similar – good practice.';
+        } else {
+          writeFeedback.textContent =
+            'This looks quite different from the printed kanji. Try to center it and use more of the box.';
+        }
+      }
+
+      writeCheckBtn.addEventListener('click', scoreAgainstCurrentKanji);
+    }
+  }
+
+  if (writeToggleBtn && writeSection && writeCanvas) {
+    writeToggleBtn.addEventListener('click', () => {
+      const current = getCurrentKanji(state);
+      if (!current) return;
+      writing = !writing;
+      if (!writing && clearWriteCanvas) {
+        clearWriteCanvas();
+      }
+      if (!writing) {
+        peekKanji = false;
+      }
+      updateWritingUi();
+    });
+  }
+
+  if (writePeekBtn && cardKanji) {
+    writePeekBtn.addEventListener('click', () => {
+      if (!writing) return;
+      peekKanji = !peekKanji;
+      updateWritingUi();
+    });
+  }
+
   render(state);
 }
-
