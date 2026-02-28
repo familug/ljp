@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
- * Update src/buildMeta.js with the last commit hash and datetime in UTC.
- * Run before commit or deploy: node scripts/updateBuildMeta.mjs
+ * Update src/buildMeta.ts with the last commit hash and datetime in UTC.
+ * Run before commit or deploy: bun scripts/updateBuildMeta.ts
  */
 import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const outPath = join(root, 'src', 'buildMeta.js');
+const outPath = join(root, 'src', 'buildMeta.ts');
 
 let hash = 'dev';
 let datetimeIso = '';
@@ -31,7 +31,7 @@ const content = `export const BUILD_META = {
 };
 
 /** Format build label with datetime in user's local timezone */
-export function formatBuildLabel(hash, datetimeIso) {
+export function formatBuildLabel(hash: string | undefined, datetimeIso: string | undefined): string {
   const h = hash || 'dev';
   if (!datetimeIso) return \`Build \${h}\`;
   try {
