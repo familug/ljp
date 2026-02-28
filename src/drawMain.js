@@ -1,7 +1,9 @@
 import { initTheme } from './shell/appShell.js';
 import { loadJlptKanji } from './data/jlptSource.js';
+import { getCachedKanji, setCachedKanji } from './data/kanjiCache.js';
 import { ALL_KANJI as SAMPLE_KANJI } from './core/kanjiData.js';
 import { BUILD_META } from './buildMeta.js';
+import { registerSw } from './registerSw.js';
 
 function applyBuildMeta(win, doc) {
   const el = doc.getElementById('build-meta');
@@ -208,13 +210,29 @@ function setupDrawing(win, doc) {
 
   guessBtn.addEventListener('click', recognize);
 
-  // Load kanji data
+  // Load kanji data (use cache so repeat loads are instant)
+  const cached = getCachedKanji(win.localStorage || null);
+  if (cached && cached.length > 0) {
+    kanjiList = cached;
+    ready = true;
+    guessBtn.disabled = false;
+    results.textContent = 'Draw a kanji, then tap "Guess kanji".';
+    loadJlptKanji(['N5', 'N4', 'N3', 'N2'])
+      .then((fresh) => {
+        setCachedKanji(win.localStorage, fresh);
+      })
+      .catch(() => {});
+    return;
+  }
+
   guessBtn.disabled = true;
   results.textContent = 'Loading kanji list…';
 
   loadJlptKanji(['N5', 'N4', 'N3', 'N2'])
     .then((all) => {
-      kanjiList = Array.isArray(all) ? all : SAMPLE_KANJI;
+      const list = Array.isArray(all) ? all : SAMPLE_KANJI;
+      setCachedKanji(win.localStorage, list);
+      kanjiList = list;
       ready = true;
       guessBtn.disabled = false;
       results.textContent = 'Draw a kanji, then tap "Guess kanji".';
@@ -228,6 +246,7 @@ function setupDrawing(win, doc) {
     });
 }
 
+registerSw(window);
 applyBuildMeta(window, document);
 setupDrawing(window, document);
 

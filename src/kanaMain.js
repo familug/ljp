@@ -1,9 +1,10 @@
 import { initTheme } from './shell/appShell.js';
 import { BUILD_META } from './buildMeta.js';
+import { registerSw } from './registerSw.js';
 
 function applyBuildMeta(win, doc) {
   const el = doc.getElementById('build-meta');
-  if (!el || ! BUILD_META) return;
+  if (!el || !BUILD_META) return;
   const hash = BUILD_META.hash || 'dev';
   const datetime = BUILD_META.datetimeIso || '';
   const label = datetime ? `${hash} · ${datetime}` : hash;
@@ -48,6 +49,7 @@ function initKanaChrome(win, doc) {
   }
 }
 
+registerSw(window);
 applyBuildMeta(window, document);
 initKanaChrome(window, document);
 

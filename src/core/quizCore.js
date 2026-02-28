@@ -1,10 +1,17 @@
 const DEFAULT_LEVELS = ['N3'];
+const LEVEL_VALUES = ['N5', 'N4', 'N3', 'N2', 'N5-N3', 'ALL'];
 
 export function filterByLevels(allKanji, levels) {
   if (!Array.isArray(allKanji)) return [];
   const normalized = levels && levels.length ? levels : DEFAULT_LEVELS;
   const levelSet = new Set(normalized);
   return allKanji.filter((k) => levelSet.has(k.level));
+}
+
+export function normalizeLevelPreference(rawValue, fallback = DEFAULT_LEVELS[0]) {
+  if (typeof rawValue !== 'string' || rawValue.length === 0) return fallback;
+  if (!LEVEL_VALUES.includes(rawValue)) return fallback;
+  return rawValue;
 }
 
 export function createSession(allKanji, options = {}) {

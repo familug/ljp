@@ -8,7 +8,8 @@ import {
   markKnown,
   markUnknown,
   advance,
-  getAccuracy
+  getAccuracy,
+  normalizeLevelPreference
 } from '../src/core/quizCore.js';
 
 function testFilterByLevels() {
@@ -83,13 +84,60 @@ function testAdvanceDoesNotChangeStats() {
   assert.ok(state.currentIndex !== originalIndex || state.pool.length === 1);
 }
 
+function testNormalizeLevelPreferenceValidValues() {
+  assert.equal(
+    normalizeLevelPreference('N5', 'N3'),
+    'N5',
+    'Should keep a valid JLPT level value'
+  );
+  assert.equal(
+    normalizeLevelPreference('ALL', 'N3'),
+    'ALL',
+    'Should keep a special ALL level value'
+  );
+}
+
+function testNormalizeLevelPreferenceInvalidOrEmpty() {
+  assert.equal(
+    normalizeLevelPreference('', 'N3'),
+    'N3',
+    'Empty string should fall back to provided default'
+  );
+  assert.equal(
+    normalizeLevelPreference('UNKNOWN', 'N2'),
+    'N2',
+    'Unknown value should fall back to provided default'
+  );
+}
+
+function testNormalizeLevelPreferenceNonString() {
+  assert.equal(
+    normalizeLevelPreference(null, 'N3'),
+    'N3',
+    'Null should fall back to default'
+  );
+  assert.equal(
+    normalizeLevelPreference(undefined, 'N3'),
+    'N3',
+    'Undefined should fall back to default'
+  );
+  assert.equal(
+    normalizeLevelPreference(42, 'N3'),
+    'N3',
+    'Non-string should fall back to default'
+  );
+}
+
 const tests = [
   ['filterByLevels', testFilterByLevels],
   ['createSession defaults', testCreateSessionDefaults],
   ['reveal toggle', testRevealToggle],
   ['markKnown / markUnknown / accuracy', testMarkKnownUnknownAndAccuracy],
   ['setLevels', testSetLevelsChangesPool],
-  ['advance stats', testAdvanceDoesNotChangeStats]
+  ['advance stats', testAdvanceDoesNotChangeStats],
+  ['normalizeLevelPreference valid values', testNormalizeLevelPreferenceValidValues],
+  ['normalizeLevelPreference invalid or empty', testNormalizeLevelPreferenceInvalidOrEmpty],
+  ['normalizeLevelPreference non-string', testNormalizeLevelPreferenceNonString]
 ];
 
 let failed = 0;

@@ -43,6 +43,16 @@ Runs entirely in the browser and is suitable for **GitHub Pages** deployment.
 
    Then open the printed URL (e.g. `http://localhost:8000`) in your browser.
 
+   **Run on your phone (same Wi‑Fi):**  
+   To use the app on your phone while the server runs on your computer, bind the server to all interfaces and open it from the phone using your computer’s local IP:
+
+   ```bash
+   python3 -m http.server 8000 --bind 0.0.0.0
+   ```
+
+   Find your computer’s LAN IP (e.g. `192.168.1.5` on Linux: `ip addr`; on macOS: System Settings → Network). On your phone’s browser, open `http://<that-IP>:8000/` (same Wi‑Fi required). The app will load; kanji data is cached after the first load so repeat visits are fast.  
+   Note: over plain HTTP the PWA (install / offline) will not activate on the phone; for “Add to Home Screen” and offline use, open the app via **GitHub Pages** (HTTPS) on the phone.
+
    On first load, the app will fetch the **full kanji dataset** from  
    `https://raw.githubusercontent.com/davidluzgouveia/kanji-data/master/kanji.json`  
    and filter it down to **JLPT N5–N2** entries (N5, N4, N3, N2).

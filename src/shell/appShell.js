@@ -5,11 +5,13 @@ import {
   markKnown,
   markUnknown,
   advance,
-  getAccuracy
+  getAccuracy,
+  normalizeLevelPreference
 } from '../core/quizCore.js';
 import { createInitialSrsState, updateSrsState, normalizeSrsState } from '../core/srs.js';
 
 const PROGRESS_KEY = 'jlpt-kanji-progress-v1';
+const LEVEL_STORAGE_KEY = 'jlpt-level-choice-v1';
 
 function createTtsApi(win) {
   if (!win || !('speechSynthesis' in win)) {
@@ -203,7 +205,33 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     }
   }
 
-  const initialLevels = levelsFromSelectValue(levelSelect ? levelSelect.value : 'N3');
+  function readStoredLevelValue() {
+    try {
+      return win.localStorage.getItem(LEVEL_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  function writeStoredLevelValue(value) {
+    try {
+      win.localStorage.setItem(LEVEL_STORAGE_KEY, value);
+    } catch {
+      // ignore storage failures
+    }
+  }
+
+  const defaultLevelValue = levelSelect && levelSelect.value ? levelSelect.value : 'N3';
+  const storedRawLevel = readStoredLevelValue();
+  const initialSelectValue = storedRawLevel
+    ? normalizeLevelPreference(storedRawLevel, defaultLevelValue)
+    : defaultLevelValue;
+
+  if (levelSelect) {
+    levelSelect.value = initialSelectValue;
+  }
+
+  const initialLevels = levelsFromSelectValue(initialSelectValue);
   let state = createSession(allKanji, { levels: initialLevels });
   let perKanjiProgress = {};
   let detailsOpen = false;
@@ -440,6 +468,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       const levels = levelsFromSelectValue(levelSelect.value);
       state = setLevels(state, allKanji, levels);
       render(state);
+      writeStoredLevelValue(levelSelect.value);
     });
   }
 

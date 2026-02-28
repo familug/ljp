@@ -9,6 +9,8 @@
       content="Learn JLPT N3 and N2 kanji with readings, examples, and text-to-speech."
     />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="theme-color" content="#0b0f19" />
   </head>
   <body>
     <header class="app-header">
@@ -79,7 +81,8 @@
     </nav>
 
     <main class="app-main">
-      <section id="view-kanji" class="app-view" aria-label="Kanji trainer">
+      <p id="app-loading" class="app-loading" aria-live="polite">Loading kanji…</p>
+      <section id="view-kanji" class="app-view app-view--hidden" aria-label="Kanji trainer">
       <section class="card" aria-live="polite">
         <header class="card__header">
           <div class="card__level" id="card-level"></div>

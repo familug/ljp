@@ -29,8 +29,15 @@ High-level architecture
   - Dark/light themes via `html[data-theme]` using CSS custom properties.
   - Respects `color-scheme` and overall `prefers-reduced-motion`.
 - `src/main.js`
-  - Startup wiring: asynchronously loads the full JLPT kanji list and then calls `bootstrapKanjiApp(...)`.
-  - On failure (e.g. offline or network issues), falls back to the small sample set from `kanjiData.js`.
+  - Startup wiring: loads kanji list then calls `bootstrapKanjiApp(...)`.
+  - **Fast repeat loads**: reads from `kanjiCache` (localStorage) first; if present, bootstraps immediately and refreshes data in the background. If no cache, shows "Loading kanji…" then fetches, caches, and bootstraps.
+  - On fetch failure (e.g. offline), falls back to the small sample set from `kanjiData.js`.
+  - Registers the PWA service worker via `registerSw(window)`.
+- `src/data/kanjiCache.js`
+  - In-memory/localStorage cache for the JLPT kanji list so repeat loads are instant.
+  - `getCachedKanji(storage)` → parsed array or `null` if missing/invalid.
+  - `setCachedKanji(storage, list)` → stores the list under `localStorage['jlpt-kanji-cache-v1']`.
+  - Used by `main.js` and `drawMain.js`; tests in `tests/kanjiCache.test.js`.
 - `src/core/kanjiData.js`
   - Static sample data only. Exports `KANJI_N3`, `KANJI_N2`, `ALL_KANJI = [...KANJI_N3, ...KANJI_N2]`.
   - Each kanji object has:
@@ -70,6 +77,7 @@ High-level architecture
     - `markKnown(state)` / `markUnknown(state)` → update stats, history, and schedule next card.
     - `advance(state)` → next card without affecting stats.
     - `getAccuracy(state)` → `0–100` number.
+    - `normalizeLevelPreference(rawValue, fallback)` → sanitize a stored JLPT level string (e.g. from `localStorage`) and fall back to a safe default when the value is missing or invalid.
   - State shape:
     - `pool`: current kanji list (filtered by levels).
     - `currentIndex`: index into `pool` or `-1` if empty (randomized on session start).
@@ -113,6 +121,9 @@ High-level architecture
         - `'N2'` → `['N2']`
         - `'N5-N3'` → `['N5', 'N4', 'N3']`
         - `'ALL'` → `['N5', 'N4', 'N3', 'N2']`
+      - Level persistence:
+        - Stores the last selected JLPT level value in `localStorage['jlpt-level-choice-v1']`.
+        - On load, reads this preference, normalizes it via `normalizeLevelPreference(...)` in the core, and applies it to the level dropdown and initial session (falling back to `N3` if the stored value is missing or invalid).
     - Kanji trainer view (main card):
       - On bootstrap:
         - `const initialLevels = levelsFromSelectValue(levelSelect?.value ?? 'N3');`
@@ -172,8 +183,14 @@ High-level architecture
 - `src/kanaMain.js`
   - Entry point for the `/kana/` page.
   - Calls `initTheme(...)`, wires the shared nav drawer, applies `BUILD_META` to the footer, and leaves the kana content itself static (no per-item interactivity yet).
+- **PWA (Progressive Web App)**:
+  - `manifest.webmanifest`: name, short_name, start_url, display standalone, theme/background color, icon (icon.svg).
+  - `sw.js`: service worker caches app shell (HTML, CSS, main JS) and the remote kanji-data JSON so the app works offline after first load. Network-first for same-origin; cache-first for the kanji JSON once cached.
+  - `src/registerSw.js`: `registerSw(win)` registers the worker with scope at the app root (works from `/`, `/kana/`, `/draw/` and from GitHub Pages subpath). Called from `main.js`, `kanaMain.js`, and `drawMain.js`.
+  - Service workers require a secure context (HTTPS or localhost); the app works locally over `http://localhost:...`.
 - `src/drawMain.js`
   - Entry point for the `/draw/` page.
+  - Uses `kanjiCache` so the draw page also loads instantly when the main app has already cached data; otherwise loads kanji then caches.
   - Responsibilities:
     - Initializes a drawing canvas where the user can sketch *any* kanji.
     - Loads the JLPT N5–N2 list via `loadJlptKanji(...)` (or falls back to `KANJI_N3/N2` sample data).
@@ -190,15 +207,12 @@ Testing and red/green flow
 - For any new feature or non-trivial behavior change, **add at least three focused tests** that describe the new behavior (happy path, edge cases, and failure/negative case where applicable).
 - For every behavior change, feature, or bugfix, **add or update at least one unit test** that captures the expected behavior; do not remove tests that describe real user-visible behavior unless you also update this document to explain why the behavior changed.
 - Tests cover:
-  - `filterByLevels` (N3 vs N2 vs both).
-  - `createSession` defaults (N3, stats, revealed flag, index).
-  - Reveal toggle logic.
-  - `markKnown` / `markUnknown` plus history and `getAccuracy`.
-  - `setLevels` to ensure pool switches to N2 correctly.
-  - `advance` leaving stats unchanged while moving index.
+  - `tests/core.test.js`: `filterByLevels`, `createSession` defaults, reveal toggle, `markKnown`/`markUnknown`/`getAccuracy`, `setLevels`, `advance`, `normalizeLevelPreference`.
+  - `tests/kanjiCache.test.js`: `getCachedKanji` (missing, invalid, null storage), `setCachedKanji` (round-trip, ignores non-array).
 - Command:
   - Preferred: **Bun**: `bun tests/core.test.js` (or `bun run test`); always prefer Bun over Node when available.
   - Fallback: **Node**: `node tests/core.test.js` only if Bun is unavailable.
+  - Run cache tests: `node tests/kanjiCache.test.js` (or include in a single test run).
 - When changing core behavior (e.g. stats, levels, randomization rules), **follow a strict red/green/refactor loop**:
   - Write or update tests first so they fail (red).
   - Implement the minimal code change to make them pass (green).
@@ -210,11 +224,12 @@ Running locally
 - Tests:
   - With Bun (preferred): `bun tests/core.test.js`.
   - With Node: `node tests/core.test.js`.
-- Static HTTP server for UI:
+- Static HTTP server for UI (required for PWA and ES modules):
   - From project root (`/home/arch/ljp`), any of:
-    - `python3 -m http.server 8000`
+    - `python3 -m http.server 8000` (local only)
+    - `python3 -m http.server 8000 --bind 0.0.0.0` (reachable from other devices on the same Wi‑Fi, e.g. phone: open `http://<computer-IP>:8000/`)
     - `bunx serve .` (once Bun is installed)
-  - Open `http://localhost:8000/` (or printed URL) in a modern browser that supports ES modules and the Speech Synthesis API.
+  - Open `http://localhost:8000/` (or printed URL) in a modern browser. Service worker and installability require HTTPS or localhost; when opening from a phone via LAN HTTP, the app runs but PWA install/offline will not activate.
 - Common pitfall:
   - `404` in Python server logs after `/` is usually just `favicon.ico` and is harmless.
   - Real issues will show in browser dev tools console (JS errors).
