@@ -2,16 +2,13 @@ import { bootstrapKanjiApp } from './shell/appShell.js';
 import { loadJlptKanji } from './data/jlptSource.js';
 import { getCachedKanji, setCachedKanji } from './data/kanjiCache.js';
 import { ALL_KANJI as SAMPLE_KANJI } from './core/kanjiData.js';
-import { BUILD_META } from './buildMeta.js';
+import { BUILD_META, formatBuildLabel } from './buildMeta.js';
 import { registerSw } from './registerSw.js';
 
 function applyBuildMeta(win, doc) {
   const el = doc.getElementById('build-meta');
   if (!el || !BUILD_META) return;
-  const hash = BUILD_META.hash || 'dev';
-  const datetime = BUILD_META.datetimeIso || '';
-  const label = datetime ? `${hash} · ${datetime}` : hash;
-  el.textContent = `Build ${label}`;
+  el.textContent = formatBuildLabel(BUILD_META.hash, BUILD_META.datetimeIso);
 }
 
 function showApp(win, doc) {

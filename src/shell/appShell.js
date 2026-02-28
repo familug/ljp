@@ -463,6 +463,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     levelSelect.addEventListener('change', () => {
       const levels = levelsFromSelectValue(levelSelect.value);
       state = setLevels(state, allKanji, levels);
+      detailsOpen = false;
       render(state);
       writeStoredLevelValue(levelSelect.value);
     });
@@ -516,6 +517,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       }
       writing = false;
       peekKanji = false;
+      detailsOpen = false;
       if (clearWriteCanvas) {
         clearWriteCanvas();
       }
@@ -564,6 +566,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       }
       writing = false;
       peekKanji = false;
+      detailsOpen = false;
       if (clearWriteCanvas) {
         clearWriteCanvas();
       }
@@ -584,6 +587,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       }
       writing = false;
       peekKanji = false;
+      detailsOpen = false;
       if (clearWriteCanvas) {
         clearWriteCanvas();
       }

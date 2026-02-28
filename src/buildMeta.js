@@ -1,5 +1,18 @@
 export const BUILD_META = {
-  hash: 'a8231f0',
-  datetimeIso: '2026-02-26T15:15:09Z'
+  hash: '196b5ab',
+  datetimeIso: '2026-02-28T13:18:01.000Z'
 };
 
+/** Format build label with datetime in user's local timezone */
+export function formatBuildLabel(hash, datetimeIso) {
+  const h = hash || 'dev';
+  if (!datetimeIso) return `Build ${h}`;
+  try {
+    const d = new Date(datetimeIso);
+    if (isNaN(d.getTime())) return `Build ${h} · ${datetimeIso}`;
+    const local = d.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
+    return `Build ${h} · ${local}`;
+  } catch {
+    return `Build ${h} · ${datetimeIso}`;
+  }
+}
