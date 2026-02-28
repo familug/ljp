@@ -1,0 +1,2 @@
+#!/bin/sh
+npm run build:meta && git add src/buildMeta.js

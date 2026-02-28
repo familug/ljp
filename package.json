@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "node tests/core.test.js && node tests/kanjiCache.test.js",
-    "build:meta": "node scripts/updateBuildMeta.mjs"
+    "build:meta": "node scripts/updateBuildMeta.mjs",
+    "prepare": "node -e \"const f=require('fs');const p=require('path');const s=p.join(process.cwd(),'hooks','pre-commit');const d=p.join(process.cwd(),'.git','hooks');if(f.existsSync(s)&&f.existsSync(d)){f.copyFileSync(s,p.join(d,'pre-commit'));f.chmodSync(p.join(d,'pre-commit'),0o755)}\""
   },
   "keywords": [
     "kanji",
