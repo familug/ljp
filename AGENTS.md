@@ -210,9 +210,8 @@ Testing and red/green flow
   - `tests/core.test.js`: `filterByLevels`, `createSession` defaults, reveal toggle, `markKnown`/`markUnknown`/`getAccuracy`, `setLevels`, `advance`, `normalizeLevelPreference`.
   - `tests/kanjiCache.test.js`: `getCachedKanji` (missing, invalid, null storage), `setCachedKanji` (round-trip, ignores non-array).
 - Command:
-  - Preferred: **Bun**: `bun tests/core.test.js` (or `bun run test`); always prefer Bun over Node when available.
-  - Fallback: **Node**: `node tests/core.test.js` only if Bun is unavailable.
-  - Run cache tests: `node tests/kanjiCache.test.js` (or include in a single test run).
+  - **Bun** (required): `bun tests/core.test.js` (or `bun run test`). Use Bun for tests and scripts.
+  - `bun run build:meta` updates build info before commit; pre-commit hook runs it automatically.
 - When changing core behavior (e.g. stats, levels, randomization rules), **follow a strict red/green/refactor loop**:
   - Write or update tests first so they fail (red).
   - Implement the minimal code change to make them pass (green).
