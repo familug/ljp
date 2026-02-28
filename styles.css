@@ -380,10 +380,11 @@ html[data-theme='light'] .card__section {
 }
 
 .draw-canvas-wrapper {
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
   border-radius: var(--radius-md);
   border: 1px dashed var(--color-border-subtle);
-  padding: 0.4rem;
+  padding: 0.5rem;
   background-color: rgba(15, 23, 42, 0.8);
 }
 
@@ -397,10 +398,11 @@ html[data-theme='light'] .card__section {
 }
 
 .draw-controls {
-  margin-top: 0.5rem;
+  margin-top: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .draw-results__list {
@@ -408,12 +410,6 @@ html[data-theme='light'] .card__section {
   margin: 0.3rem 0 0;
   font-size: 0.9rem;
   line-height: 1.5;
-}
-
-.write-hint {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
 }
 
 .write-score {
