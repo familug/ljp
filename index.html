@@ -100,6 +100,14 @@
             >
               🔊
             </button>
+            <button
+              id="write-peek"
+              class="button button--small button--ghost"
+              type="button"
+              aria-label="Peek at kanji"
+            >
+              Peek
+            </button>
           </div>
         </div>
 
@@ -162,11 +170,14 @@
                   Write
                 </button>
                 <button
-                  id="write-peek"
+                  id="write-clear"
                   class="button button--small button--ghost"
                   type="button"
                 >
-                  Peek
+                  Clear
+                </button>
+                <button id="write-check" class="button button--small button--ghost" type="button">
+                  Check
                 </button>
                 <span id="write-score" class="write-score" aria-live="polite"></span>
               </div>
@@ -178,15 +189,6 @@
                   class="draw-canvas"
                   aria-label="Draw this kanji"
                 ></canvas>
-              </div>
-              <div id="write-controls-host"></div>
-              <div class="draw-controls">
-                <button id="write-clear" class="button button--secondary" type="button">
-                  Clear
-                </button>
-                <button id="write-check" class="button button--primary" type="button">
-                  Check stroke
-                </button>
               </div>
               <div
                 id="write-feedback"

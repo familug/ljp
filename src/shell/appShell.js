@@ -175,7 +175,6 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   const writeToggleBtn = doc.getElementById('write-toggle');
   const writePeekBtn = doc.getElementById('write-peek');
   const writeSection = doc.getElementById('write-section');
-  const writeControlsHost = doc.getElementById('write-controls-host');
   const writeCanvas = doc.getElementById('write-canvas');
   const writeClearBtn = doc.getElementById('write-clear');
   const writeCheckBtn = doc.getElementById('write-check');
@@ -238,20 +237,10 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   let writing = false;
   let peekKanji = false;
   let clearWriteCanvas = null;
-  const writeHeader = writeToggleBtn && writeToggleBtn.closest('.card__section-header');
-  const writeHeaderActions = writeHeader && writeHeader.querySelector('.card__actions');
 
-  function updateWritingUi() {
+  function updateWritingUi(currentState) {
     if (!cardKanji || !writeToggleBtn) return;
-
-    // Re-parent write controls so they sit below the canvas while writing
-    if (writeHeaderActions && writeControlsHost && writeHeader) {
-      if (writing && writeHeaderActions.parentElement !== writeControlsHost) {
-        writeControlsHost.appendChild(writeHeaderActions);
-      } else if (!writing && writeHeaderActions.parentElement !== writeHeader) {
-        writeHeader.appendChild(writeHeaderActions);
-      }
-    }
+    const hasKanji = currentState && currentState.pool?.length > 0 && currentState.currentIndex >= 0;
 
     // Write section + main kanji visibility
     if (writeSection) {
@@ -289,10 +278,18 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
 
     // Buttons
     writeToggleBtn.textContent = writing ? 'Done' : 'Write';
+    writeToggleBtn.disabled = !hasKanji;
 
     if (writePeekBtn) {
       writePeekBtn.textContent = peekKanji ? 'Hide' : 'Peek';
       writePeekBtn.disabled = !writing;
+      writePeekBtn.hidden = !writing || !hasKanji;
+    }
+    if (writeClearBtn) {
+      writeClearBtn.disabled = !writing || !hasKanji;
+    }
+    if (writeCheckBtn) {
+      writeCheckBtn.disabled = !writing || !hasKanji;
     }
   }
 
@@ -413,7 +410,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       if (exampleSection) {
         exampleSection.classList.remove('card__section--hidden');
       }
-      updateWritingUi();
+      updateWritingUi(state);
       return;
     }
 
@@ -460,7 +457,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     statsSeen.textContent = `Seen: ${currentState.stats.seen}`;
     statsKnown.textContent = `Known: ${currentState.stats.known} (${accuracy.toFixed(0)}%)`;
 
-    updateWritingUi();
+    updateWritingUi(state);
   }
 
   if (levelSelect) {
@@ -707,7 +704,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
           return;
         }
         if (!hasInk) {
-          writeFeedback.textContent = 'Draw the kanji above, then tap "Check stroke".';
+          writeFeedback.textContent = 'Draw the kanji above, then tap Check.';
           return;
         }
 
@@ -807,7 +804,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       if (!writing) {
         peekKanji = false;
       }
-      updateWritingUi();
+      updateWritingUi(state);
     });
   }
 
@@ -815,7 +812,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     writePeekBtn.addEventListener('click', () => {
       if (!writing) return;
       peekKanji = !peekKanji;
-      updateWritingUi();
+      updateWritingUi(state);
     });
   }
 
