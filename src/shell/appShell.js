@@ -156,6 +156,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   const cardExampleSentence = doc.getElementById('card-example-sentence');
   const cardExampleReading = doc.getElementById('card-example-reading');
   const cardExampleTranslation = doc.getElementById('card-example-translation');
+  const exampleSection = doc.getElementById('example-section');
 
   const statsSeen = doc.getElementById('stats-seen');
   const statsKnown = doc.getElementById('stats-known');
@@ -175,6 +176,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   const writeClearBtn = doc.getElementById('write-clear');
   const writeCheckBtn = doc.getElementById('write-check');
   const writeFeedback = doc.getElementById('write-feedback');
+  const writeScore = doc.getElementById('write-score');
 
   initTheme(win, doc, themeToggle);
 
@@ -341,6 +343,9 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
       if (clearWriteCanvas) {
         clearWriteCanvas();
       }
+      if (exampleSection) {
+        exampleSection.classList.remove('card__section--hidden');
+      }
       updateWritingUi();
       return;
     }
@@ -387,6 +392,14 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     const accuracy = getAccuracy(currentState);
     statsSeen.textContent = `Seen: ${currentState.stats.seen}`;
     statsKnown.textContent = `Known: ${currentState.stats.known} (${accuracy.toFixed(0)}%)`;
+
+    if (exampleSection) {
+      if (writing) {
+        exampleSection.classList.add('card__section--hidden');
+      } else {
+        exampleSection.classList.remove('card__section--hidden');
+      }
+    }
 
     updateWritingUi();
   }
@@ -573,6 +586,9 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
         ctx.fillRect(0, 0, size, size);
         writeFeedback.textContent = '';
         hasInk = false;
+        if (writeScore) {
+          writeScore.textContent = '';
+        }
       };
 
       clearWriteCanvas();
@@ -687,6 +703,20 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
         }
 
         const normalized = energy > 0 ? error / energy : Infinity;
+
+        if (writeScore) {
+          let scoreValue;
+          if (!isFinite(normalized)) {
+            scoreValue = 0;
+          } else {
+            const maxN = 3;
+            const clamped = Math.min(normalized, maxN);
+            scoreValue = Math.round(((maxN - clamped) / maxN) * 100);
+            if (scoreValue < 0) scoreValue = 0;
+            if (scoreValue > 100) scoreValue = 100;
+          }
+          writeScore.textContent = `Stroke score: ${scoreValue}/100`;
+        }
 
         if (!isFinite(normalized)) {
           writeFeedback.textContent =

@@ -329,6 +329,10 @@ html[data-theme='light'] .card__level {
   border: 1px solid var(--color-border-subtle);
 }
 
+.card__section--hidden {
+  display: none;
+}
+
 html[data-theme='light'] .card__section {
   background-color: var(--color-bg-subtle);
 }
@@ -400,6 +404,12 @@ html[data-theme='light'] .card__section {
   margin: 0;
   font-size: 0.85rem;
   color: var(--color-text-muted);
+}
+
+.write-score {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-left: 0.4rem;
 }
 
 .kana-table {
