@@ -15,9 +15,15 @@ Purpose
 High-level architecture
 -----------------------
 - `index.html`
-  - Single-page app shell.
+  - Single-page **kanji trainer** shell at `/`.
   - Loads `styles.css` and `src/main.js` (ES module).
-  - Provides semantic structure: header (filters + theme toggle), main card UI, hint panel, footer.
+  - Provides semantic structure: header (emoji logo + level filter + theme toggle + hamburger), main card UI, hint panel, footer with build metadata.
+- `kana/index.html`
+  - Standalone **Kana basics** page at `/kana/` (hiragana/katakana charts and beginner explanations).
+  - Shares `styles.css`, header/footer chrome, and nav drawer with `index.html`.
+- `draw/index.html`
+  - Standalone **Draw kanji** page at `/draw/` for handwriting-based lookup across N5–N2 kanji.
+  - Shares `styles.css`, header/footer chrome, and nav drawer with `index.html`.
 - `styles.css`
   - Global styling + modern card UI.
   - Dark/light themes via `html[data-theme]` using CSS custom properties.
@@ -51,6 +57,9 @@ High-level architecture
 - `src/data/exampleOverrides.js`
   - Contains hand-crafted example sentences, readings, and translations for selected kanji.
   - `jlptSource.buildExample` checks this map first; if an entry exists, it is used instead of the generic template.
+- `src/buildMeta.js`
+  - Exports a small `BUILD_META` object `{ hash, datetimeIso }` baked at commit time.
+  - `src/main.js`, `src/kanaMain.js`, and `src/drawMain.js` read this and write a footer line like `Build <hash> · <ISO_DATETIME>` for quick version identification.
 - `src/core/quizCore.js` (functional core)
   - Pure logic; **no DOM, no browser APIs**.
   - Key exports:
@@ -74,6 +83,13 @@ High-level architecture
   - Owns all **DOM, events, and browser APIs (TTS, localStorage, matchMedia)**.
   - Exports `bootstrapKanjiApp(allKanji, window, document)`.
   - Responsibilities:
+    - Navigation:
+      - Emoji logo (`🧑‍🎓 🇯🇵`) is a link back to `/`.
+      - Hamburger button toggles a nav drawer listing:
+        - **Kanji trainer** → `/`
+        - **Kana basics** → `/kana/`
+        - **Draw kanji** → `/draw/`
+      - Drawer works on desktop and mobile; aria attributes (`aria-expanded`, `aria-current`) kept in sync.
     - Theme:
       - `initTheme(win, doc, toggleButton)`:
         - Reads `localStorage['kanji-trainer-theme']` if present (`'light' | 'dark'`).
@@ -83,9 +99,11 @@ High-level architecture
     - TTS:
       - `createTtsApi(win)`:
         - Guards `speechSynthesis` availability.
-        - Chooses Japanese voice (`lang` starts with `ja`) if present, else fallback voice.
-        - `speakKanji(kanji)`: speaks `kunyomi[0] || onyomi[0] || kanji`.
-        - `speakExample(kanji)`: speaks example `sentence || reading`.
+        - Chooses a Japanese voice (`lang` starts with `ja`) for kanji + Japanese examples, or a fallback voice if none exists.
+        - Chooses an English voice (`lang` starts with `en`) for English translations, or a fallback voice if none exists.
+        - `speakKanji(kanji)`: speaks `kunyomi[0] || onyomi[0] || kanji` in Japanese.
+        - `speakExample(kanji)`: speaks example `sentence || reading` in Japanese.
+        - `speakExampleTranslation(kanji)`: speaks example `translation` in English so users can practice listening to English as well.
         - Uses `SpeechSynthesisUtterance`; cancels any ongoing utterance before speaking.
     - Levels:
       - `levelsFromSelectValue(value)`:
@@ -95,15 +113,41 @@ High-level architecture
         - `'N2'` → `['N2']`
         - `'N5-N3'` → `['N5', 'N4', 'N3']`
         - `'ALL'` → `['N5', 'N4', 'N3', 'N2']`
-    - State + rendering:
+    - Kanji trainer view (main card):
       - On bootstrap:
         - `const initialLevels = levelsFromSelectValue(levelSelect?.value ?? 'N3');`
         - `let state = createSession(allKanji, { levels: initialLevels });`
-      - `render(state)`:
-        - Updates DOM based on `pool`, `currentIndex`, `revealed`, `stats`.
-        - Handles disabled/enabled states for buttons when there is no kanji.
-        - Applies blur/visibility to readings (`card__section-content--hidden/--visible`).
-        - Displays progress: `Seen: N`, `Known: K (ACC%)`, where `ACC = getAccuracy(state)`.
+        - `render(state)`:
+          - Updates DOM based on `pool`, `currentIndex`, `revealed`, `stats`.
+          - Handles disabled/enabled states for buttons when there is no kanji.
+          - Displays progress: `Seen: N`, `Known: K (ACC%)`, where `ACC = getAccuracy(state)`.
+      - Sections:
+        - **Kanji header**: shows current `level` + index `i / N`, big kanji glyph, and a TTS button for the kanji.
+        - **Details accordion**:
+          - Contains **Readings** (`音` + `訓`) and **Meanings**.
+          - Initially collapsed; toggled by a `Show`/`Hide` button (pure UI flag, not tied to `state.revealed` anymore).
+        - **Example**:
+          - Example sentence, reading, and English translation.
+          - Two TTS buttons:
+            - Japanese example (`🔊`) and English translation (`EN`).
+        - **Write it (per-kanji handwriting practice)**:
+          - Controls:
+            - `Write`: enters/exits write mode for the current kanji.
+            - `Peek`: while in write mode, temporarily shows/hides the big kanji glyph.
+            - A live `Stroke score: NN/100` indicator updated after each check.
+          - When **write mode** is active:
+            - The write canvas panel is shown directly under the kanji header, and **Details** + **Example** sections are hidden so users do not have to scroll on mobile.
+            - The main kanji glyph is hidden unless `Peek` is active.
+            - When the user starts drawing, the app temporarily hides the Details accordion (until they explicitly show it again).
+            - On `Done`, `Next`, `I know this`, or `Don't know yet`, write mode is exited, the canvas is cleared, `Peek` is reset, and Details/Example are restored.
+          - Canvas + scoring:
+            - A square canvas (pointer-based) where the user draws a kanji.
+            - `Check stroke`:
+              - Downscales both user drawing and a font-rendered version of the current kanji to a small grid.
+              - Computes a rough pixel-wise difference (sum of squared brightness differences normalized by stroke “energy”).
+              - Maps that into a **0–100 stroke score** (higher is better) and shows qualitative feedback:
+                - Very close (excellent), close enough (good practice), or quite different (encourages centering and using more of the box).
+              - This is deliberately a **lightweight heuristic, not full OCR**; small misalignments are tolerated via relaxed thresholds.
       - Progress persistence:
         - Uses `localStorage['jlpt-kanji-progress-v1']` to store:
           - Aggregate stats `state.stats` (`seen`, `known`, `unknown`).
@@ -115,10 +159,28 @@ High-level architecture
           - Writes a snapshot back to `localStorage`.
     - Event wiring:
       - Level select `change` → `setLevels` + `render`.
-      - Reveal/hide button → `toggleReveal` + `render`.
-      - Known/unknown buttons → `markKnown`/`markUnknown` + `render`.
-      - Next button → `advance` + `render`.
-      - TTS buttons → call `tts.speakKanji` / `tts.speakExample` on current card.
+      - Details `Show`/`Hide` button → toggles the Details accordion (UI-only flag) + `render`.
+      - Known/unknown buttons → `markKnown`/`markUnknown` + persist per-kanji progress + `render`.
+      - Next button → `advance` + `render` (write mode and peek are reset).
+      - TTS buttons:
+        - Call `tts.speakKanji` / `tts.speakExample` / `tts.speakExampleTranslation` on the current card.
+      - Write mode buttons:
+        - `Write` → toggle write mode; hide/show Details and Example; reset/clear canvas when leaving.
+        - `Peek` → toggle big kanji visibility while staying in write mode.
+        - `Clear` → clear only the handwriting canvas and stroke score.
+        - `Check stroke` → run the pixel-based similarity check and update score + feedback.
+- `src/kanaMain.js`
+  - Entry point for the `/kana/` page.
+  - Calls `initTheme(...)`, wires the shared nav drawer, applies `BUILD_META` to the footer, and leaves the kana content itself static (no per-item interactivity yet).
+- `src/drawMain.js`
+  - Entry point for the `/draw/` page.
+  - Responsibilities:
+    - Initializes a drawing canvas where the user can sketch *any* kanji.
+    - Loads the JLPT N5–N2 list via `loadJlptKanji(...)` (or falls back to `KANJI_N3/N2` sample data).
+    - For each kanji in the pool:
+      - Renders a font glyph onto a tiny offscreen canvas and compares it to the user drawing using the same pixel-difference heuristic as write mode.
+      - Sorts all kanji by this score and shows the **top 10 guesses** in an ordered list, formatted as `KANJI (LEVEL) – meanings`.
+    - This page is explicitly **experimental**; it is meant as a rough handwriting helper rather than a production-grade OCR engine.
 
 Testing and red/green flow
 --------------------------

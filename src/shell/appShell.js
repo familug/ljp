@@ -152,6 +152,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   const cardKanji = doc.getElementById('card-kanji');
   const cardReadings = doc.getElementById('card-readings');
   const cardMeanings = doc.getElementById('card-meanings');
+  const detailsSection = doc.getElementById('details-section');
   const cardDetails = doc.getElementById('card-details');
   const cardExampleSentence = doc.getElementById('card-example-sentence');
   const cardExampleReading = doc.getElementById('card-example-reading');
@@ -172,6 +173,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   const writeToggleBtn = doc.getElementById('write-toggle');
   const writePeekBtn = doc.getElementById('write-peek');
   const writeSection = doc.getElementById('write-section');
+  const writeControlsHost = doc.getElementById('write-controls-host');
   const writeCanvas = doc.getElementById('write-canvas');
   const writeClearBtn = doc.getElementById('write-clear');
   const writeCheckBtn = doc.getElementById('write-check');
@@ -208,24 +210,58 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
   let writing = false;
   let peekKanji = false;
   let clearWriteCanvas = null;
+  const writeHeader = writeToggleBtn && writeToggleBtn.closest('.card__section-header');
+  const writeHeaderActions = writeHeader && writeHeader.querySelector('.card__actions');
 
   function updateWritingUi() {
-    if (!writeSection || !cardKanji || !writeToggleBtn) return;
-    if (writing) {
-      writeSection.classList.add('card__section-body--visible');
-      writeSection.classList.remove('card__section-body--hidden');
-      if (!peekKanji) {
-        cardKanji.classList.add('card__kanji--hidden');
-      } else {
-        cardKanji.classList.remove('card__kanji--hidden');
+    if (!cardKanji || !writeToggleBtn) return;
+
+    // Re-parent write controls so they sit below the canvas while writing
+    if (writeHeaderActions && writeControlsHost && writeHeader) {
+      if (writing && writeHeaderActions.parentElement !== writeControlsHost) {
+        writeControlsHost.appendChild(writeHeaderActions);
+      } else if (!writing && writeHeaderActions.parentElement !== writeHeader) {
+        writeHeader.appendChild(writeHeaderActions);
       }
-      writeToggleBtn.textContent = 'Done';
-    } else {
-      writeSection.classList.add('card__section-body--hidden');
-      writeSection.classList.remove('card__section-body--visible');
-      cardKanji.classList.remove('card__kanji--hidden');
-      writeToggleBtn.textContent = 'Write';
     }
+
+    // Write section + main kanji visibility
+    if (writeSection) {
+      if (writing) {
+        writeSection.classList.add('card__section-body--visible');
+        writeSection.classList.remove('card__section-body--hidden');
+      } else {
+        writeSection.classList.add('card__section-body--hidden');
+        writeSection.classList.remove('card__section-body--visible');
+      }
+    }
+
+    if (writing && !peekKanji) {
+      cardKanji.classList.add('card__kanji--hidden');
+    } else {
+      cardKanji.classList.remove('card__kanji--hidden');
+    }
+
+    // Details and example sections
+    if (detailsSection) {
+      if (writing) {
+        detailsSection.classList.add('card__section--hidden');
+      } else {
+        detailsSection.classList.remove('card__section--hidden');
+      }
+    }
+
+    if (exampleSection) {
+      if (writing) {
+        exampleSection.classList.add('card__section--hidden');
+      } else {
+        exampleSection.classList.remove('card__section--hidden');
+      }
+    }
+
+    // Buttons
+    writeToggleBtn.textContent = writing ? 'Done' : 'Write';
+
     if (writePeekBtn) {
       writePeekBtn.textContent = peekKanji ? 'Hide' : 'Peek';
       writePeekBtn.disabled = !writing;
@@ -337,6 +373,9 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
         cardDetails.classList.add('card__section-body--hidden');
         cardDetails.classList.remove('card__section-body--visible');
       }
+      if (detailsSection) {
+        detailsSection.classList.remove('card__section--hidden');
+      }
       if (toggleReadingsBtn) {
         toggleReadingsBtn.textContent = 'Show';
       }
@@ -392,14 +431,6 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     const accuracy = getAccuracy(currentState);
     statsSeen.textContent = `Seen: ${currentState.stats.seen}`;
     statsKnown.textContent = `Known: ${currentState.stats.known} (${accuracy.toFixed(0)}%)`;
-
-    if (exampleSection) {
-      if (writing) {
-        exampleSection.classList.add('card__section--hidden');
-      } else {
-        exampleSection.classList.remove('card__section--hidden');
-      }
-    }
 
     updateWritingUi();
   }
