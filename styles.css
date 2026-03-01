@@ -569,6 +569,17 @@ html[data-theme='light'] .control__input {
   outline-offset: 1px;
 }
 
+.control--block {
+  display: block;
+}
+
+.control__hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
 .button {
   border-radius: var(--radius-pill);
   border: none;

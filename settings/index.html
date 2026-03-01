@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Draw Kanji – JLPT Kanji Trainer</title>
+    <title>Settings – JLPT Kanji Trainer</title>
     <meta
       name="description"
-      content="Draw a kanji and let the trainer guess it from the JLPT N5–N2 set."
+      content="Settings for daily goal and preferences."
     />
     <link rel="stylesheet" href="../styles.css" />
     <link rel="manifest" href="../manifest.webmanifest" />
@@ -20,9 +20,9 @@
             🧑‍🎓 🇯🇵
           </a>
         </h1>
-        <p class="app-subtitle">Draw a character and we&apos;ll guess it.</p>
+        <p class="app-subtitle">Settings</p>
       </div>
-      <div class="header-controls" aria-label="Display and filter controls">
+      <div class="header-controls" aria-label="Display controls">
         <button
           id="nav-toggle"
           class="button button--icon button--ghost app-header__menu"
@@ -62,54 +62,49 @@
             <a href="../kana/" class="nav-drawer__link">Kana basics</a>
           </li>
           <li>
-            <a href="./" class="nav-drawer__link" aria-current="page">Draw kanji</a>
+            <a href="../draw/" class="nav-drawer__link">Draw kanji</a>
           </li>
           <li>
-            <a href="../settings/" class="nav-drawer__link">Settings</a>
+            <a href="./" class="nav-drawer__link" aria-current="page">Settings</a>
           </li>
         </ul>
       </div>
     </nav>
 
     <main class="app-main">
-      <section class="app-view" aria-label="Draw kanji">
+      <section class="app-view" aria-label="Settings">
         <section class="card" aria-live="polite">
           <header class="card__header">
-            <div class="card__level">Experimental</div>
-            <div class="card__index">Handwriting helper</div>
+            <div class="card__level">Preferences</div>
+            <div class="card__index">Daily goal</div>
           </header>
 
           <div class="card__body">
             <div class="card__section">
               <div class="card__section-header">
-                <h2 class="card__section-title">Draw your kanji</h2>
+                <h2 class="card__section-title">Words per day</h2>
               </div>
               <div class="card__section-content">
-                <p>Use your mouse or finger to sketch a kanji in the box below.</p>
-                <div class="draw-canvas-wrapper">
-                  <canvas
-                    id="draw-canvas"
-                    class="draw-canvas"
-                    aria-label="Draw kanji here"
-                  ></canvas>
+                <p>
+                  Set how many kanji you want to mark as &quot;I know this&quot; per day.
+                  The counter resets at midnight (local time) and is shown on the Kanji trainer page.
+                </p>
+                <div class="control control--block" style="margin-top: 0.75rem;">
+                  <label for="daily-goal" class="control__label">Daily goal</label>
+                  <input
+                    id="daily-goal"
+                    type="number"
+                    min="1"
+                    max="1000"
+                    step="1"
+                    class="control__input"
+                    aria-describedby="daily-goal-hint"
+                  />
+                  <span id="daily-goal-hint" class="control__hint">Words per day (1–1000). Default: 40.</span>
                 </div>
-                <div class="draw-controls">
-                  <button id="draw-clear" class="button button--secondary" type="button">
-                    Clear
-                  </button>
-                  <button id="draw-guess" class="button button--primary" type="button">
-                    Guess kanji
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="card__section">
-              <div class="card__section-header">
-                <h2 class="card__section-title">Best guesses</h2>
-              </div>
-              <div class="card__section-content" id="draw-results">
-                Draw a kanji, then tap &quot;Guess kanji&quot;.
+                <p id="daily-goal-saved" class="card__section-content--muted" style="margin-top: 0.5rem; display: none;" aria-live="polite">
+                  Saved.
+                </p>
               </div>
             </div>
           </div>
@@ -119,12 +114,11 @@
 
     <footer class="app-footer">
       <p>
-        Built as a static app for GitHub Pages. TTS availability depends on your browser and OS.
+        Built as a static app for GitHub Pages.
       </p>
       <p id="build-meta" class="build-meta" aria-label="Build information"></p>
     </footer>
 
-    <script type="module" src="../src/drawMain.js"></script>
+    <script type="module" src="../src/settingsMain.js"></script>
   </body>
 </html>
-

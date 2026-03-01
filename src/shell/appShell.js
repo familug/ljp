@@ -2,6 +2,75 @@ import { createSession, setLevels, markKnown, markUnknown, getAccuracy, normaliz
 import { updateSrsState, normalizeSrsState } from '../core/srs.js';
 const PROGRESS_KEY = 'jlpt-kanji-progress-v1';
 const LEVEL_STORAGE_KEY = 'jlpt-level-choice-v1';
+const DAILY_GOAL_KEY = 'jlpt-daily-goal-v1';
+const DAILY_KNOWN_KEY = 'jlpt-daily-known-v1';
+const DEFAULT_DAILY_GOAL = 40;
+function getTodayString(win) {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+export function readDailyGoal(win) {
+    try {
+        const raw = win.localStorage.getItem(DAILY_GOAL_KEY);
+        if (raw == null)
+            return DEFAULT_DAILY_GOAL;
+        const n = parseInt(raw, 10);
+        return Number.isFinite(n) && n >= 1 && n <= 1000 ? n : DEFAULT_DAILY_GOAL;
+    }
+    catch {
+        return DEFAULT_DAILY_GOAL;
+    }
+}
+export function writeDailyGoal(win, goal) {
+    try {
+        const n = Math.max(1, Math.min(1000, Math.floor(goal)));
+        win.localStorage.setItem(DAILY_GOAL_KEY, String(n));
+    }
+    catch {
+        // ignore
+    }
+}
+function getDailyKnownCount(win) {
+    try {
+        const raw = win.localStorage.getItem(DAILY_KNOWN_KEY);
+        if (!raw)
+            return 0;
+        const data = JSON.parse(raw);
+        const today = getTodayString(win);
+        if (data.date !== today)
+            return 0;
+        const c = typeof data.count === 'number' ? data.count : 0;
+        return c >= 0 ? c : 0;
+    }
+    catch {
+        return 0;
+    }
+}
+function incrementDailyKnown(win) {
+    try {
+        const today = getTodayString(win);
+        const raw = win.localStorage.getItem(DAILY_KNOWN_KEY);
+        let count = 1;
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed.date === today && typeof parsed.count === 'number' && parsed.count >= 0) {
+                    count = parsed.count + 1;
+                }
+            }
+            catch {
+                // use 1
+            }
+        }
+        win.localStorage.setItem(DAILY_KNOWN_KEY, JSON.stringify({ date: today, count }));
+    }
+    catch {
+        // ignore
+    }
+}
 function createTtsApi(win) {
     if (!win || !('speechSynthesis' in win)) {
         return {
@@ -146,6 +215,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     const exampleSection = doc.getElementById('example-section');
     const statsSeen = doc.getElementById('stats-seen');
     const statsKnown = doc.getElementById('stats-known');
+    const statsToday = doc.getElementById('stats-today');
     const toggleReadingsBtn = doc.getElementById('toggle-readings');
     const markKnownBtn = doc.getElementById('mark-known');
     const markUnknownBtn = doc.getElementById('mark-unknown');
@@ -384,6 +454,8 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
                 statsSeen.textContent = 'Seen: 0';
             if (statsKnown)
                 statsKnown.textContent = 'Known: 0 (0%)';
+            if (statsToday)
+                statsToday.textContent = '';
             detailsOpen = false;
             writing = false;
             if (cardDetails) {
@@ -457,6 +529,10 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
             statsSeen.textContent = `Seen: ${currentState.stats.seen}`;
         if (statsKnown)
             statsKnown.textContent = `Known: ${currentState.stats.known} (${accuracy.toFixed(0)}%)`;
+        const dailyGoal = readDailyGoal(win);
+        const dailyCount = getDailyKnownCount(win);
+        if (statsToday)
+            statsToday.textContent = `Today: ${dailyCount} / ${dailyGoal}`;
         updateWritingUi(state);
     }
     if (levelSelect) {
@@ -479,6 +555,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
             const answered = getCurrentKanji(state);
             const now = Date.now();
             state = markKnown(state);
+            incrementDailyKnown(win);
             if (answered && answered.id) {
                 const prev = perKanjiProgress[answered.id] || {
                     seen: 0,
