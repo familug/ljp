@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun tests/core.test.ts && bun tests/kanjiCache.test.ts",
+    "test": "bun tests/core.test.ts && bun tests/kanjiCache.test.ts && bun tests/strokeScore.test.ts",
     "build": "bun run build:meta && tsc",
     "build:meta": "bun scripts/updateBuildMeta.ts",
     "prepare": "bun scripts/install-hooks.ts"

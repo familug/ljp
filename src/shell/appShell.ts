@@ -9,6 +9,7 @@ import {
   normalizeLevelPreference
 } from '../core/quizCore.js';
 import { updateSrsState, normalizeSrsState } from '../core/srs.js';
+import { scoreStroke } from '../core/strokeScore.js';
 
 const PROGRESS_KEY = 'jlpt-kanji-progress-v1';
 const LEVEL_STORAGE_KEY = 'jlpt-level-choice-v1';
@@ -822,67 +823,54 @@ export function bootstrapKanjiApp(
         const userImage = tmpCtx.getImageData(0, 0, targetSize, targetSize);
         const userData = userImage.data;
 
-        const glyphCanvas = doc.createElement('canvas');
-        glyphCanvas.width = targetSize;
-        glyphCanvas.height = targetSize;
-        const glyphCtx = glyphCanvas.getContext('2d');
-        if (!glyphCtx) {
+        // Render glyph at the same resolution as the user canvas, then
+        // downscale to targetSize so both images go through identical scaling.
+        const glyphFull = doc.createElement('canvas');
+        glyphFull.width = size;
+        glyphFull.height = size;
+        const glyphFullCtx = glyphFull.getContext('2d');
+        if (!glyphFullCtx) {
           writeFeedback!.textContent = 'Drawing not supported in this browser.';
           return;
         }
+        glyphFullCtx.fillStyle = '#020617';
+        glyphFullCtx.fillRect(0, 0, size, size);
+        glyphFullCtx.fillStyle = '#f9fafb';
+        glyphFullCtx.textAlign = 'center';
+        glyphFullCtx.textBaseline = 'middle';
+        glyphFullCtx.font =
+          '140px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        glyphFullCtx.fillText(current.kanji, size / 2, size / 2);
 
-        glyphCtx.fillStyle = '#020617';
-        glyphCtx.fillRect(0, 0, targetSize, targetSize);
-        glyphCtx.fillStyle = '#f9fafb';
-        glyphCtx.textAlign = 'center';
-        glyphCtx.textBaseline = 'middle';
-        glyphCtx.font =
-          '26px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-        glyphCtx.fillText(current.kanji, targetSize / 2, targetSize / 2);
-
-        const glyphImage = glyphCtx.getImageData(0, 0, targetSize, targetSize);
+        const glyphSmall = doc.createElement('canvas');
+        glyphSmall.width = targetSize;
+        glyphSmall.height = targetSize;
+        const glyphSmallCtx = glyphSmall.getContext('2d');
+        if (!glyphSmallCtx) {
+          writeFeedback!.textContent = 'Drawing not supported in this browser.';
+          return;
+        }
+        glyphSmallCtx.drawImage(glyphFull, 0, 0, targetSize, targetSize);
+        const glyphImage = glyphSmallCtx.getImageData(0, 0, targetSize, targetSize);
         const glyphData = glyphImage.data;
 
-        let error = 0;
-        let energy = 0;
-        for (let i = 0; i < userData.length; i += 4) {
-          const ur = userData[i];
-          const ug = userData[i + 1];
-          const ub = userData[i + 2];
-          const gr = glyphData[i];
-          const gg = glyphData[i + 1];
-          const gb = glyphData[i + 2];
-          const u = (ur + ug + ub) / (3 * 255);
-          const g = (gr + gg + gb) / (3 * 255);
-          const diff = u - g;
-          error += diff * diff;
-          energy += u * u;
-        }
+        const result = scoreStroke(userData, glyphData);
+        const scoreValue = result.score;
 
-        const normalized = energy > 0 ? error / energy : Infinity;
+        const passed = scoreValue >= 70;
 
-        let scoreValue;
-        if (!isFinite(normalized)) {
-          scoreValue = 0;
-        } else {
-          const maxN = 3;
-          const clamped = Math.min(normalized, maxN);
-          scoreValue = Math.round(((maxN - clamped) / maxN) * 100);
-          if (scoreValue < 0) scoreValue = 0;
-          if (scoreValue > 100) scoreValue = 100;
-        }
-
-        let qualText;
-        if (!isFinite(normalized)) {
+        let qualText: string;
+        if (result.userInk < 12) {
           qualText = 'Draw using more of the box and with a solid stroke, then try again.';
-        } else if (normalized < 1.2) {
-          qualText = 'Looks very close – great job!';
-        } else if (normalized < 2.5) {
-          qualText = 'Close enough. The overall shape is similar – good practice.';
+        } else if (passed) {
+          qualText = 'Looks very close – great job! This would count as a pass (70%+).';
+        } else if (scoreValue >= 45) {
+          qualText = 'Close, but not yet a 70% match. Refine the shape and try again.';
         } else {
           qualText =
             'This looks quite different from the printed kanji. Try to center it and use more of the box.';
         }
+
         writeFeedback!.textContent = `Stroke score: ${scoreValue}/100. ${qualText}`;
       }
 
