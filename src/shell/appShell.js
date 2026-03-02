@@ -6,7 +6,7 @@ const LEVEL_STORAGE_KEY = 'jlpt-level-choice-v1';
 const DAILY_GOAL_KEY = 'jlpt-daily-goal-v1';
 const DAILY_KNOWN_KEY = 'jlpt-daily-known-v1';
 const DEFAULT_DAILY_GOAL = 40;
-function getTodayString(win) {
+function getTodayString() {
     const d = new Date();
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -40,7 +40,7 @@ function getDailyKnownCount(win) {
         if (!raw)
             return 0;
         const data = JSON.parse(raw);
-        const today = getTodayString(win);
+        const today = getTodayString();
         if (data.date !== today)
             return 0;
         const c = typeof data.count === 'number' ? data.count : 0;
@@ -52,7 +52,7 @@ function getDailyKnownCount(win) {
 }
 function incrementDailyKnown(win) {
     try {
-        const today = getTodayString(win);
+        const today = getTodayString();
         const raw = win.localStorage.getItem(DAILY_KNOWN_KEY);
         let count = 1;
         if (raw) {
@@ -217,6 +217,7 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     const statsSeen = doc.getElementById('stats-seen');
     const statsKnown = doc.getElementById('stats-known');
     const statsToday = doc.getElementById('stats-today');
+    const statsSrs = doc.getElementById('stats-srs');
     const toggleReadingsBtn = doc.getElementById('toggle-readings');
     const markKnownBtn = doc.getElementById('mark-known');
     const markUnknownBtn = doc.getElementById('mark-unknown');
@@ -281,6 +282,9 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     const initialLevels = levelsFromSelectValue(initialSelectValue);
     let state = createSession(allKanji, { levels: initialLevels });
     let perKanjiProgress = {};
+    function safeNum(val, fallback = 0) {
+        return typeof val === 'number' && Number.isFinite(val) ? val : fallback;
+    }
     let detailsOpen = false;
     let writing = false;
     let peekKanji = false;
@@ -386,7 +390,8 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
         const minDue = Math.min(...source.map((c) => c.dueMs || now));
         const windowLimit = minDue + DAY_MS;
         const windowCards = source.filter((c) => (c.dueMs || now) <= windowLimit);
-        const chosen = windowCards[Math.floor(Math.random() * windowCards.length)];
+        const pick = windowCards.length ? windowCards : source;
+        const chosen = pick[Math.floor(Math.random() * pick.length)];
         return chosen.index;
     }
     const persisted = loadPersistedProgress();
@@ -457,6 +462,8 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
                 statsKnown.textContent = 'Known: 0 (0%)';
             if (statsToday)
                 statsToday.textContent = '';
+            if (statsSrs)
+                statsSrs.textContent = '';
             detailsOpen = false;
             writing = false;
             if (cardDetails) {
@@ -534,6 +541,23 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
         const dailyCount = getDailyKnownCount(win);
         if (statsToday)
             statsToday.textContent = `Today: ${dailyCount} / ${dailyGoal}`;
+        if (statsSrs) {
+            const now = Date.now();
+            let dueCount = 0;
+            let newCount = 0;
+            for (const k of currentState.pool) {
+                const entry = perKanjiProgress[k.id];
+                if (!entry) {
+                    newCount++;
+                }
+                else {
+                    const srs = normalizeSrsState(entry, now);
+                    if (srs.due <= now)
+                        dueCount++;
+                }
+            }
+            statsSrs.textContent = `Due: ${dueCount} · New: ${newCount}`;
+        }
         updateWritingUi(state);
     }
     if (levelSelect) {
@@ -558,26 +582,14 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
             state = markKnown(state);
             incrementDailyKnown(win);
             if (answered && answered.id) {
-                const prev = perKanjiProgress[answered.id] || {
-                    seen: 0,
-                    known: 0,
-                    unknown: 0,
-                    lastResult: null
-                };
-                const srsPrev = {
-                    interval: prev.interval,
-                    repetitions: prev.repetitions,
-                    ease: prev.ease,
-                    due: prev.due,
-                    lastReviewed: prev.lastReviewed
-                };
-                const srsNext = updateSrsState(srsPrev, 'good', now);
+                const prev = perKanjiProgress[answered.id] || {};
+                const srsNext = updateSrsState(prev, 'good', now);
                 perKanjiProgress = {
                     ...perKanjiProgress,
                     [answered.id]: {
-                        seen: prev.seen + 1,
-                        known: prev.known + 1,
-                        unknown: prev.unknown,
+                        seen: safeNum(prev.seen) + 1,
+                        known: safeNum(prev.known) + 1,
+                        unknown: safeNum(prev.unknown),
                         lastResult: 'known',
                         ...srsNext
                     }
@@ -606,26 +618,14 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
             const now = Date.now();
             state = markUnknown(state);
             if (answered && answered.id) {
-                const prev = perKanjiProgress[answered.id] || {
-                    seen: 0,
-                    known: 0,
-                    unknown: 0,
-                    lastResult: null
-                };
-                const srsPrev = {
-                    interval: prev.interval,
-                    repetitions: prev.repetitions,
-                    ease: prev.ease,
-                    due: prev.due,
-                    lastReviewed: prev.lastReviewed
-                };
-                const srsNext = updateSrsState(srsPrev, 'again', now);
+                const prev = perKanjiProgress[answered.id] || {};
+                const srsNext = updateSrsState(prev, 'again', now);
                 perKanjiProgress = {
                     ...perKanjiProgress,
                     [answered.id]: {
-                        seen: prev.seen + 1,
-                        known: prev.known,
-                        unknown: prev.unknown + 1,
+                        seen: safeNum(prev.seen) + 1,
+                        known: safeNum(prev.known),
+                        unknown: safeNum(prev.unknown) + 1,
                         lastResult: 'unknown',
                         ...srsNext
                     }
@@ -873,5 +873,43 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
             updateWritingUi(state);
         });
     }
+    // Keyboard shortcuts (desktop convenience)
+    doc.addEventListener('keydown', (evt) => {
+        // Skip if user is typing in an input/select or modifier keys are held
+        const tag = evt.target?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT')
+            return;
+        if (evt.ctrlKey || evt.metaKey || evt.altKey)
+            return;
+        switch (evt.key) {
+            case ' ':
+            case 'Enter':
+                // Toggle reveal
+                evt.preventDefault();
+                if (toggleReadingsBtn && !toggleReadingsBtn.disabled) {
+                    toggleReadingsBtn.click();
+                }
+                break;
+            case '1':
+                // I know this
+                if (markKnownBtn && !markKnownBtn.disabled) {
+                    markKnownBtn.click();
+                }
+                break;
+            case '2':
+                // Don't know yet
+                if (markUnknownBtn && !markUnknownBtn.disabled) {
+                    markUnknownBtn.click();
+                }
+                break;
+            case 'n':
+            case 'N':
+                // Next card
+                if (nextCardBtn && !nextCardBtn.disabled) {
+                    nextCardBtn.click();
+                }
+                break;
+        }
+    });
     render(state);
 }

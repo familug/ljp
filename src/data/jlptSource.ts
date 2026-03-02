@@ -11,6 +11,13 @@ function jlptNumberToLevel(jlptNew: number): string | null {
   return null;
 }
 
+const MAX_SENTENCE_LENGTH = 25;
+
+function firstSentence(text: string): string {
+  const idx = text.indexOf('。');
+  return idx >= 0 ? text.slice(0, idx + 1) : text;
+}
+
 function buildExample(
   kanji: string,
   onyomi: string[],
@@ -18,7 +25,10 @@ function buildExample(
 ): { sentence: string; reading: string; translation: string } {
   const override = EXAMPLE_OVERRIDES[kanji];
   if (override) {
-    return override;
+    const short = firstSentence(override.sentence);
+    if (short.length <= MAX_SENTENCE_LENGTH) {
+      return { ...override, sentence: short };
+    }
   }
 
   const reading =

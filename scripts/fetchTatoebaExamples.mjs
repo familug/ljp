@@ -93,7 +93,7 @@ export const EXAMPLE_OVERRIDES = `;
   const body = JSON.stringify(overrides, null, 2);
   const out = `${header}${body};\n`;
 
-  const outPath = path.resolve(__dirname, '../src/data/exampleOverrides.js');
+  const outPath = path.resolve(__dirname, '../src/data/exampleOverrides.ts');
   await fs.writeFile(outPath, out, 'utf8');
   console.log(`Wrote ${Object.keys(overrides).length} example sentences to ${outPath}`);
 }

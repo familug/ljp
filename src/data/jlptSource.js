@@ -11,10 +11,18 @@ function jlptNumberToLevel(jlptNew) {
         return 'N2';
     return null;
 }
+const MAX_SENTENCE_LENGTH = 25;
+function firstSentence(text) {
+    const idx = text.indexOf('。');
+    return idx >= 0 ? text.slice(0, idx + 1) : text;
+}
 function buildExample(kanji, onyomi, kunyomi) {
     const override = EXAMPLE_OVERRIDES[kanji];
     if (override) {
-        return override;
+        const short = firstSentence(override.sentence);
+        if (short.length <= MAX_SENTENCE_LENGTH) {
+            return { ...override, sentence: short };
+        }
     }
     const reading = (Array.isArray(kunyomi) && kunyomi[0]) ||
         (Array.isArray(onyomi) && onyomi[0]) ||

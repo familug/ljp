@@ -21,7 +21,11 @@ function showApp(win, doc) {
 async function start() {
     const win = window;
     const doc = document;
-    const storage = win.localStorage || null;
+    let storage = null;
+    try {
+        storage = win.localStorage;
+    }
+    catch { /* private browsing */ }
     const cached = getCachedKanji(storage);
     if (cached && cached.length > 0) {
         bootstrapKanjiApp(cached, win, doc);

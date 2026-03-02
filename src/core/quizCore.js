@@ -93,7 +93,7 @@ function recordResult(state, kind) {
             unknown: state.stats.unknown + (kind === 'unknown' ? 1 : 0)
         },
         history: [
-            ...state.history,
+            ...state.history.slice(-199),
             {
                 id: current.id,
                 level: current.level,

@@ -22,7 +22,8 @@ function showApp(win: Window, doc: Document): void {
 async function start(): Promise<void> {
   const win = window;
   const doc = document;
-  const storage = win.localStorage || null;
+  let storage: Storage | null = null;
+  try { storage = win.localStorage; } catch { /* private browsing */ }
   const cached = getCachedKanji(storage) as Kanji[] | null;
 
   if (cached && cached.length > 0) {

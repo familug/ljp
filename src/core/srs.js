@@ -38,7 +38,7 @@ export function updateSrsState(prevRaw, grade, nowMs = Date.now()) {
             interval = Math.round(interval * ease);
         }
         repetitions += 1;
-        ease += 0.05;
+        ease = Math.min(3.0, ease + 0.05);
     }
     const due = nowMs + interval * DAY_MS;
     return {
