@@ -845,6 +845,18 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
             updateWritingUi(state);
         });
     }
+    // Shortcut help overlay
+    const shortcutOverlay = doc.getElementById('shortcut-overlay');
+    function toggleShortcutHelp() {
+        if (!shortcutOverlay)
+            return;
+        shortcutOverlay.hidden = !shortcutOverlay.hidden;
+    }
+    if (shortcutOverlay) {
+        shortcutOverlay.addEventListener('click', () => {
+            shortcutOverlay.hidden = true;
+        });
+    }
     // Keyboard shortcuts (desktop convenience)
     doc.addEventListener('keydown', (evt) => {
         // Skip if user is typing in an input/select or modifier keys are held
@@ -853,7 +865,15 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
             return;
         if (evt.ctrlKey || evt.metaKey || evt.altKey)
             return;
+        // Close overlay on Escape
+        if (evt.key === 'Escape' && shortcutOverlay && !shortcutOverlay.hidden) {
+            shortcutOverlay.hidden = true;
+            return;
+        }
         switch (evt.key) {
+            case '?':
+                toggleShortcutHelp();
+                break;
             case ' ':
             case 'Enter':
                 // Toggle reveal
@@ -868,11 +888,62 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
                     markKnownBtn.click();
                 }
                 break;
+            case '0':
             case '2':
                 // Don't know yet
                 if (markUnknownBtn && !markUnknownBtn.disabled) {
                     markUnknownBtn.click();
                 }
+                break;
+            case 'r':
+                // Speak kanji reading
+                if (speakKanjiBtn && !speakKanjiBtn.disabled) {
+                    speakKanjiBtn.click();
+                }
+                break;
+            case 'e':
+                // Speak example sentence
+                if (speakExampleBtn && !speakExampleBtn.disabled) {
+                    speakExampleBtn.click();
+                }
+                break;
+            case 't':
+                // Speak English translation
+                if (speakExampleEnBtn && !speakExampleEnBtn.disabled) {
+                    speakExampleEnBtn.click();
+                }
+                break;
+            case '[':
+                // Previous level
+                if (levelSelect) {
+                    const idx = levelSelect.selectedIndex;
+                    if (idx > 0) {
+                        levelSelect.selectedIndex = idx - 1;
+                        levelSelect.dispatchEvent(new Event('change'));
+                    }
+                }
+                break;
+            case ']':
+                // Next level
+                if (levelSelect) {
+                    const idx = levelSelect.selectedIndex;
+                    if (idx < levelSelect.options.length - 1) {
+                        levelSelect.selectedIndex = idx + 1;
+                        levelSelect.dispatchEvent(new Event('change'));
+                    }
+                }
+                break;
+            case 'k':
+                win.location.href = './';
+                break;
+            case 'h':
+                win.location.href = './kana/';
+                break;
+            case 'd':
+                win.location.href = './draw/';
+                break;
+            case 's':
+                win.location.href = './settings/';
                 break;
         }
     });
