@@ -871,13 +871,13 @@ export function bootstrapKanjiApp(
         // Japanese convention: ⭕ red for pass, ❌ blue for fail
         writeFeedback!.classList.remove('write-feedback--pass', 'write-feedback--fail');
         if (result.userInk < 12) {
-          writeFeedback!.textContent = `${scoreValue}% – Draw more`;
+          writeFeedback!.textContent = `${scoreValue}/💯`;
           writeFeedback!.classList.add('write-feedback--fail');
         } else if (passed) {
-          writeFeedback!.textContent = `⭕ ${scoreValue}%`;
+          writeFeedback!.textContent = `⭕ ${scoreValue}/💯`;
           writeFeedback!.classList.add('write-feedback--pass');
         } else {
-          writeFeedback!.textContent = `❌ ${scoreValue}%`;
+          writeFeedback!.textContent = `❌ ${scoreValue}/💯`;
           writeFeedback!.classList.add('write-feedback--fail');
         }
       }
