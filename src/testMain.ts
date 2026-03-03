@@ -17,6 +17,30 @@ import {
 } from './core/testCore.js';
 
 const PROGRESS_KEY = 'jlpt-kanji-progress-v1';
+const LEVEL_STORAGE_KEY = 'jlpt-level-choice-v1';
+
+function levelsFromSelectValue(value: string): string[] {
+  if (value === 'N5') return ['N5'];
+  if (value === 'N4') return ['N4'];
+  if (value === 'N3') return ['N3'];
+  if (value === 'N2') return ['N2'];
+  if (value === 'N5-N3') return ['N5', 'N4', 'N3'];
+  if (value === 'ALL') return ['N5', 'N4', 'N3', 'N2'];
+  return ['N3'];
+}
+
+function filterByLevels(kanji: Kanji[], levels: string[]): Kanji[] {
+  return kanji.filter((k) => levels.includes(k.level));
+}
+
+function kanjiByLevelMap(kanji: Kanji[]): Record<string, Kanji[]> {
+  const map: Record<string, Kanji[]> = {};
+  for (const k of kanji) {
+    if (!map[k.level]) map[k.level] = [];
+    map[k.level].push(k);
+  }
+  return map;
+}
 
 function applyBuildMeta(win: Window, doc: Document): void {
   const el = doc.getElementById('build-meta');
@@ -97,16 +121,29 @@ function bootstrapTestApp(allKanji: Kanji[], win: Window, doc: Document): void {
     // ignore
   }
 
-  // Build kanji-by-level map
-  const allKanjiByLevel: Record<string, Kanji[]> = {};
-  for (const k of allKanji) {
-    if (!allKanjiByLevel[k.level]) allKanjiByLevel[k.level] = [];
-    allKanjiByLevel[k.level].push(k);
+  // Level selector
+  const levelSelect = doc.getElementById('test-level-select') as HTMLSelectElement | null;
+
+  // Restore persisted level
+  let storedLevel: string | null = null;
+  try { storedLevel = win.localStorage.getItem(LEVEL_STORAGE_KEY); } catch { /* ignore */ }
+  if (storedLevel && levelSelect) {
+    const valid = Array.from(levelSelect.options).some((o) => o.value === storedLevel);
+    if (valid) levelSelect.value = storedLevel;
+  }
+
+  function getSelectedLevels(): string[] {
+    return levelsFromSelectValue(levelSelect ? levelSelect.value : 'N3');
+  }
+
+  function filteredKanji(): Kanji[] {
+    return filterByLevels(allKanji, getSelectedLevels());
   }
 
   const nowMs = Date.now();
-  const dueKanji = getDueKanji(allKanji, perKanjiProgress, nowMs);
-  let state: TestState = createTestSession(dueKanji, allKanjiByLevel);
+  let currentFiltered = filteredKanji();
+  let dueKanji = getDueKanji(currentFiltered, perKanjiProgress, nowMs);
+  let state: TestState = createTestSession(dueKanji, kanjiByLevelMap(currentFiltered));
 
   // DOM elements
   const startBtn = doc.getElementById('test-start') as HTMLButtonElement | null;
@@ -122,11 +159,46 @@ function bootstrapTestApp(allKanji: Kanji[], win: Window, doc: Document): void {
   const reviewList = doc.getElementById('test-review-list');
   const retakeBtn = doc.getElementById('test-retake') as HTMLButtonElement | null;
 
+  const kanjiDetailEl = doc.getElementById('test-kanji-detail');
+
+  // Build lookup map: kanjiId → Kanji
+  const kanjiById: Record<string, Kanji> = {};
+  for (const k of allKanji) kanjiById[k.id] = k;
+
   const choiceBtns = choicesEl
     ? (Array.from(choicesEl.querySelectorAll('.test-choice')) as HTMLButtonElement[])
     : [];
 
   let answered = false;
+
+  function showKanjiDetail(kanjiId: string): void {
+    if (!kanjiDetailEl) return;
+    const k = kanjiById[kanjiId];
+    if (!k) { kanjiDetailEl.classList.remove('test-kanji-detail--visible'); return; }
+
+    const parts: string[] = [];
+    parts.push(`<h3 class="test-kanji-detail__title">${k.kanji} — Detail</h3>`);
+    if (k.meanings?.length) {
+      parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">Meanings</span><span>${k.meanings.join(', ')}</span></div>`);
+    }
+    if (k.onyomi?.length) {
+      parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">On'yomi</span><span>${k.onyomi.join(', ')}</span></div>`);
+    }
+    if (k.kunyomi?.length) {
+      parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">Kun'yomi</span><span>${k.kunyomi.join(', ')}</span></div>`);
+    }
+    if (k.example?.sentence) {
+      parts.push(`<div class="test-kanji-detail__example">${k.example.sentence}<br>${k.example.reading}<br>${k.example.translation}</div>`);
+    }
+    kanjiDetailEl.innerHTML = parts.join('');
+    kanjiDetailEl.classList.add('test-kanji-detail--visible');
+  }
+
+  function hideKanjiDetail(): void {
+    if (!kanjiDetailEl) return;
+    kanjiDetailEl.innerHTML = '';
+    kanjiDetailEl.classList.remove('test-kanji-detail--visible');
+  }
 
   // Intro
   function renderIntro(): void {
@@ -138,6 +210,7 @@ function bootstrapTestApp(allKanji: Kanji[], win: Window, doc: Document): void {
         if (startBtn) startBtn.disabled = true;
       } else {
         dueCountEl.textContent = `${dueKanji.length} kanji due · ${qCount} questions`;
+        if (startBtn) startBtn.disabled = false;
       }
     }
   }
@@ -146,6 +219,7 @@ function bootstrapTestApp(allKanji: Kanji[], win: Window, doc: Document): void {
   function renderQuestion(): void {
     showPhase(doc, 'question');
     answered = false;
+    hideKanjiDetail();
     if (nextBtn) nextBtn.disabled = true;
 
     const q = state.questions[state.currentQuestionIndex];
@@ -186,6 +260,7 @@ function bootstrapTestApp(allKanji: Kanji[], win: Window, doc: Document): void {
     }
 
     if (nextBtn) nextBtn.disabled = false;
+    showKanjiDetail(q.kanjiId);
   }
 
   // Results
@@ -315,9 +390,20 @@ function bootstrapTestApp(allKanji: Kanji[], win: Window, doc: Document): void {
   if (retakeBtn) {
     retakeBtn.addEventListener('click', () => {
       const freshNow = Date.now();
-      const freshDue = getDueKanji(allKanji, perKanjiProgress, freshNow);
-      state = createTestSession(freshDue, allKanjiByLevel);
+      currentFiltered = filteredKanji();
+      const freshDue = getDueKanji(currentFiltered, perKanjiProgress, freshNow);
+      state = createTestSession(freshDue, kanjiByLevelMap(currentFiltered));
       state = { ...state, phase: state.questions.length > 0 ? 'question' : 'intro' };
+      render();
+    });
+  }
+
+  if (levelSelect) {
+    levelSelect.addEventListener('change', () => {
+      try { win.localStorage.setItem(LEVEL_STORAGE_KEY, levelSelect.value); } catch { /* ignore */ }
+      currentFiltered = filteredKanji();
+      dueKanji = getDueKanji(currentFiltered, perKanjiProgress, Date.now());
+      state = createTestSession(dueKanji, kanjiByLevelMap(currentFiltered));
       render();
     });
   }

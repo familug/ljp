@@ -142,10 +142,10 @@ function testCreateTestSessionEmptyDue(): void {
   assert.equal(state.phase, 'intro');
 }
 
-function testCreateTestSessionCapsAt20(): void {
+function testCreateTestSessionCapsAt40(): void {
   const state = createTestSession(POOL, { N3: POOL.filter((k) => k.level === 'N3'), N2: POOL.filter((k) => k.level === 'N2') });
-  assert.ok(state.questions.length <= 20, 'Should cap at 20 questions');
-  assert.equal(state.questions.length, Math.min(POOL.length, 20));
+  assert.ok(state.questions.length <= 40, 'Should cap at 40 questions');
+  assert.equal(state.questions.length, Math.min(POOL.length, 40));
   assert.equal(state.phase, 'intro');
 }
 
@@ -303,7 +303,7 @@ const tests: Array<[string, () => void]> = [
   ['generateQuestion: reading-to-kanji', testGenerateReadingToKanji],
   ['generateQuestion: no readings fallback', testGenerateQuestionNoReadings],
   ['createTestSession: empty due', testCreateTestSessionEmptyDue],
-  ['createTestSession: caps at 20', testCreateTestSessionCapsAt20],
+  ['createTestSession: caps at 40', testCreateTestSessionCapsAt40],
   ['createTestSession: small pool', testCreateTestSessionSmallPool],
   ['answerQuestion + nextQuestion', testAnswerAndNextQuestion],
   ['answerQuestion: wrong answer', testAnswerWrongQuestion],

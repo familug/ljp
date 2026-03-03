@@ -91,7 +91,7 @@
               </div>
               <div class="card__section-content">
                 <p>
-                  You'll be quizzed on <strong>up to 20</strong> SRS-due kanji with
+                  You'll be quizzed on <strong>up to 40</strong> SRS-due kanji with
                   multiple-choice questions covering meanings and readings.
                 </p>
                 <p id="test-due-count" class="card__section-content--muted"></p>
@@ -100,6 +100,17 @@
           </div>
           <footer class="card__footer">
             <div class="card__footer-left">
+              <label class="control control--inline">
+                <span class="control__label control__label--sr-only">JLPT level</span>
+                <select id="test-level-select" class="control__input" aria-label="Select JLPT level">
+                  <option value="N3" selected>N3</option>
+                  <option value="N2">N2</option>
+                  <option value="N4">N4</option>
+                  <option value="N5">N5</option>
+                  <option value="N5-N3">N5–N3</option>
+                  <option value="ALL">N5–N2</option>
+                </select>
+              </label>
               <button id="test-start" class="button button--primary" type="button">
                 Start test
               </button>
@@ -123,9 +134,10 @@
               <button class="test-choice" type="button" data-idx="2"></button>
               <button class="test-choice" type="button" data-idx="3"></button>
             </div>
+            <div class="test-kanji-detail" id="test-kanji-detail" aria-live="polite"></div>
           </div>
           <footer class="card__footer">
-            <div class="card__footer-left">
+            <div class="test-next-wrap">
               <button id="test-next" class="button button--primary" type="button" disabled>
                 Next
               </button>

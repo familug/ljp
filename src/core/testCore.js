@@ -1,5 +1,5 @@
 import { normalizeSrsState } from './srs.js';
-const QUESTIONS_PER_SESSION = 20;
+const QUESTIONS_PER_SESSION = 40;
 const CHOICES_PER_QUESTION = 4;
 const QUESTION_TYPES = [
     'kanji-to-meaning',

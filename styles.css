@@ -835,8 +835,8 @@ html[data-theme='light'] .button--icon {
 .test-choice {
   border-radius: var(--radius-md);
   border: 1px solid rgba(148, 119, 80, 0.6);
-  padding: 0.75rem 0.5rem;
-  font-size: 0.95rem;
+  padding: 1.25rem 0.75rem;
+  font-size: 1.1rem;
   font-weight: 500;
   background-color: rgba(15, 23, 42, 0.9);
   color: var(--color-text);
@@ -958,9 +958,74 @@ html[data-theme='light'] .test-choice--wrong {
   }
 
   .test-choice {
-    padding: 0.6rem 0.4rem;
-    font-size: 0.9rem;
+    padding: 1rem 0.5rem;
+    font-size: 1rem;
   }
+}
+
+#test-question {
+  padding-bottom: 4.5rem;
+}
+
+.test-next-wrap {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  z-index: 40;
+  background: linear-gradient(transparent, var(--color-bg) 40%);
+}
+
+.test-next-wrap .button {
+  width: 100%;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.test-kanji-detail {
+  display: none;
+  background-color: rgba(15, 23, 42, 0.9);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--color-border-subtle);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+html[data-theme='light'] .test-kanji-detail {
+  background-color: var(--color-bg-subtle);
+}
+
+.test-kanji-detail--visible {
+  display: block;
+}
+
+.test-kanji-detail__title {
+  font-size: 0.85rem;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.test-kanji-detail__row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.15rem;
+}
+
+.test-kanji-detail__label {
+  color: var(--color-text-muted);
+  min-width: 5rem;
+}
+
+.test-kanji-detail__example {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--color-border-subtle);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
