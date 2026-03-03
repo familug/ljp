@@ -750,7 +750,7 @@ export function bootstrapKanjiApp(
       }
 
       clearWriteCanvas = function clearWriteCanvasImpl() {
-        ctx!.fillStyle = '#020617';
+        ctx!.fillStyle = '#1e293b';
         ctx!.fillRect(0, 0, size, size);
         drawGuideKanji();
         writeFeedback!.textContent = '';
@@ -842,7 +842,7 @@ export function bootstrapKanjiApp(
           writeFeedback!.textContent = 'Drawing not supported in this browser.';
           return;
         }
-        glyphFullCtx.fillStyle = '#020617';
+        glyphFullCtx.fillStyle = '#1e293b';
         glyphFullCtx.fillRect(0, 0, size, size);
         glyphFullCtx.fillStyle = '#f9fafb';
         glyphFullCtx.textAlign = 'center';
