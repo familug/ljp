@@ -30,3 +30,33 @@ export interface SrsState {
   due: number;
   lastReviewed: number | null;
 }
+
+export type TestQuestionType =
+  | 'kanji-to-meaning'
+  | 'meaning-to-kanji'
+  | 'kanji-to-reading'
+  | 'reading-to-kanji';
+
+export interface TestQuestion {
+  type: TestQuestionType;
+  kanjiId: string;
+  prompt: string;
+  choices: string[];
+  correctIndex: number;
+}
+
+export interface TestAnswer {
+  questionIndex: number;
+  chosenIndex: number;
+  correct: boolean;
+}
+
+export type TestPhase = 'intro' | 'question' | 'results';
+
+export interface TestState {
+  phase: TestPhase;
+  questions: TestQuestion[];
+  answers: TestAnswer[];
+  currentQuestionIndex: number;
+  testedKanjiIds: string[];
+}

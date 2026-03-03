@@ -228,6 +228,9 @@ export function initPageShortcuts(win: Window, doc: Document, base = './'): void
       case 's':
         win.location.href = base + 'settings/';
         break;
+      case 'x':
+        win.location.href = base + 'test/';
+        break;
     }
   });
 }

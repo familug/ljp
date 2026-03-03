@@ -8,7 +8,7 @@ export function registerSw(win) {
     try {
         const pathname = win.location.pathname;
         let appRoot = pathname.endsWith('/') ? pathname : pathname.replace(/\/[^/]*$/, '/');
-        if (/\/kana\/|\/draw\/|\/settings\//.test(pathname)) {
+        if (/\/kana\/|\/draw\/|\/settings\/|\/test\//.test(pathname)) {
             appRoot = appRoot.replace(/[^/]+\/$/, '/');
         }
         const swUrl = appRoot + 'sw.js';

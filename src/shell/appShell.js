@@ -216,6 +216,9 @@ export function initPageShortcuts(win, doc, base = './') {
             case 's':
                 win.location.href = base + 'settings/';
                 break;
+            case 'x':
+                win.location.href = base + 'test/';
+                break;
         }
     });
 }
