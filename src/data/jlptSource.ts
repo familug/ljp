@@ -18,6 +18,11 @@ function firstSentence(text: string): string {
   return idx >= 0 ? text.slice(0, idx + 1) : text;
 }
 
+function firstEnglishSentence(text: string): string {
+  const m = text.match(/^[^.!?]*[.!?]/);
+  return m ? m[0].trim() : text;
+}
+
 function buildExample(
   kanji: string,
   onyomi: string[],
@@ -25,9 +30,14 @@ function buildExample(
 ): { sentence: string; reading: string; translation: string } {
   const override = EXAMPLE_OVERRIDES[kanji];
   if (override) {
-    const short = firstSentence(override.sentence);
-    if (short.length <= MAX_SENTENCE_LENGTH) {
-      return { ...override, sentence: short };
+    let sentence = firstSentence(override.sentence);
+    // If the trimmed sentence lost the kanji, try the full sentence
+    if (!sentence.includes(kanji)) {
+      sentence = override.sentence;
+    }
+    if (sentence.length <= MAX_SENTENCE_LENGTH) {
+      const translation = firstEnglishSentence(override.translation);
+      return { sentence, reading: override.reading, translation };
     }
   }
 

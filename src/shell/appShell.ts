@@ -370,7 +370,7 @@ export function bootstrapKanjiApp(
     writeToggleBtn.disabled = !hasKanji;
 
     if (writePeekBtn) {
-      writePeekBtn.textContent = peekKanji ? 'Hide' : 'Peek';
+      writePeekBtn.textContent = peekKanji ? '🙈' : '👁️';
       writePeekBtn.disabled = !writing;
       writePeekBtn.hidden = !writing || !hasKanji;
     }
@@ -498,7 +498,7 @@ export function bootstrapKanjiApp(
         detailsSection.classList.remove('card__section--hidden');
       }
       if (toggleReadingsBtn) {
-        toggleReadingsBtn.textContent = 'Show';
+        toggleReadingsBtn.textContent = '👀';
       }
       if (clearWriteCanvas) {
         clearWriteCanvas();
@@ -541,11 +541,11 @@ export function bootstrapKanjiApp(
       if (detailsOpen) {
         cardDetails.classList.add('card__section-body--visible');
         cardDetails.classList.remove('card__section-body--hidden');
-        toggleReadingsBtn.textContent = 'Hide';
+        toggleReadingsBtn.textContent = '🙈';
       } else {
         cardDetails.classList.add('card__section-body--hidden');
         cardDetails.classList.remove('card__section-body--visible');
-        toggleReadingsBtn.textContent = 'Show';
+        toggleReadingsBtn.textContent = '👀';
       }
     }
 
