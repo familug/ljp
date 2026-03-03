@@ -251,6 +251,7 @@ export function bootstrapKanjiApp(
   const writeToggleBtn = doc.getElementById('write-toggle') as HTMLButtonElement | null;
   const writePeekBtn = doc.getElementById('write-peek') as HTMLButtonElement | null;
   const writeSection = doc.getElementById('write-section');
+  const writeSectionWrapper = doc.getElementById('write-section-wrapper');
   const writeCanvas = doc.getElementById('write-canvas') as HTMLCanvasElement | null;
   const writeClearBtn = doc.getElementById('write-clear') as HTMLButtonElement | null;
   const writeCheckBtn = doc.getElementById('write-check') as HTMLButtonElement | null;
@@ -356,8 +357,16 @@ export function bootstrapKanjiApp(
       }
     }
 
+    // Write section wrapper visibility
+    if (writeSectionWrapper) {
+      if (writing) {
+        writeSectionWrapper.classList.remove('card__section--hidden');
+      } else {
+        writeSectionWrapper.classList.add('card__section--hidden');
+      }
+    }
+
     // Buttons
-    writeToggleBtn.textContent = writing ? 'Done' : 'Write';
     writeToggleBtn.disabled = !hasKanji;
 
     if (writePeekBtn) {
@@ -745,6 +754,7 @@ export function bootstrapKanjiApp(
         ctx!.fillRect(0, 0, size, size);
         drawGuideKanji();
         writeFeedback!.textContent = '';
+        writeFeedback!.classList.remove('write-feedback--pass', 'write-feedback--fail');
         hasInk = false;
       };
 
@@ -858,19 +868,18 @@ export function bootstrapKanjiApp(
 
         const passed = scoreValue >= 70;
 
-        let qualText: string;
+        // Japanese convention: ⭕ red for pass, ❌ blue for fail
+        writeFeedback!.classList.remove('write-feedback--pass', 'write-feedback--fail');
         if (result.userInk < 12) {
-          qualText = 'Draw using more of the box and with a solid stroke, then try again.';
+          writeFeedback!.textContent = `${scoreValue}% – Draw more`;
+          writeFeedback!.classList.add('write-feedback--fail');
         } else if (passed) {
-          qualText = 'Looks very close – great job! This would count as a pass (70%+).';
-        } else if (scoreValue >= 45) {
-          qualText = 'Close, but not yet a 70% match. Refine the shape and try again.';
+          writeFeedback!.textContent = `⭕ ${scoreValue}%`;
+          writeFeedback!.classList.add('write-feedback--pass');
         } else {
-          qualText =
-            'This looks quite different from the printed kanji. Try to center it and use more of the box.';
+          writeFeedback!.textContent = `❌ ${scoreValue}%`;
+          writeFeedback!.classList.add('write-feedback--fail');
         }
-
-        writeFeedback!.textContent = `Stroke score: ${scoreValue}/100. ${qualText}`;
       }
 
       writeCheckBtn.addEventListener('click', scoreAgainstCurrentKanji);

@@ -88,7 +88,10 @@
       <section id="view-kanji" class="app-view app-view--hidden" aria-label="Kanji trainer">
       <section class="card" aria-live="polite">
         <header class="card__header">
-          <div class="card__level" id="card-level"></div>
+          <div class="card__header-left">
+            <div class="card__level" id="card-level"></div>
+            <span class="card__today" id="stats-today"></span>
+          </div>
           <div class="card__index" id="card-index"></div>
         </header>
 
@@ -104,10 +107,19 @@
               🔊
             </button>
             <button
+              id="write-toggle"
+              class="button button--icon"
+              type="button"
+              aria-label="Write kanji"
+            >
+              ✍️
+            </button>
+            <button
               id="write-peek"
               class="button button--small button--ghost"
               type="button"
               aria-label="Peek at kanji"
+              hidden
             >
               Peek
             </button>
@@ -161,17 +173,10 @@
             <div class="card__section-content card__section-content--muted" id="card-example-translation"></div>
           </div>
 
-          <div class="card__section">
+          <div class="card__section card__section--hidden" id="write-section-wrapper">
             <div class="card__section-header">
               <h2 class="card__section-title">Write it</h2>
               <div class="card__actions">
-                <button
-                  id="write-toggle"
-                  class="button button--small button--ghost"
-                  type="button"
-                >
-                  Write
-                </button>
                 <button
                   id="write-clear"
                   class="button button--small button--ghost"
@@ -189,14 +194,12 @@
                   aria-label="Draw this kanji"
                 ></canvas>
               </div>
-              <button id="write-check" class="button button--primary write-check-btn" type="button">
-                Check
-              </button>
-              <div
-                id="write-feedback"
-                class="card__section-content card__section-content--muted"
-                aria-live="polite"
-              ></div>
+              <div class="write-check-row">
+                <button id="write-check" class="button button--primary write-check-btn" type="button">
+                  Check
+                </button>
+                <span id="write-feedback" class="write-feedback" aria-live="polite"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -214,7 +217,6 @@
             <div class="stats" aria-label="Progress statistics">
               <span id="stats-seen"></span>
               <span id="stats-known"></span>
-              <span id="stats-today"></span>
               <span id="stats-srs"></span>
             </div>
             <button id="next-card" class="button button--ghost" type="button">
