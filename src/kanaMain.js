@@ -1,4 +1,4 @@
-import { initTheme } from './shell/appShell.js';
+import { initTheme, initPageShortcuts } from './shell/appShell.js';
 import { BUILD_META, formatBuildLabel } from './buildMeta.js';
 import { registerSw } from './registerSw.js';
 function applyBuildMeta(win, doc) {
@@ -45,3 +45,4 @@ function initKanaChrome(win, doc) {
 registerSw(window);
 applyBuildMeta(window, document);
 initKanaChrome(window, document);
+initPageShortcuts(window, document, '../');

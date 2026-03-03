@@ -1,5 +1,4 @@
-import { initTheme } from './shell/appShell.js';
-import { readDailyGoal, writeDailyGoal } from './shell/appShell.js';
+import { initTheme, initPageShortcuts, readDailyGoal, writeDailyGoal } from './shell/appShell.js';
 import { BUILD_META, formatBuildLabel } from './buildMeta.js';
 import { registerSw } from './registerSw.js';
 function applyBuildMeta(win, doc) {
@@ -72,3 +71,4 @@ function initSettingsPage(win, doc) {
 registerSw(window);
 applyBuildMeta(window, document);
 initSettingsPage(window, document);
+initPageShortcuts(window, document, '../');

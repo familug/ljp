@@ -209,6 +209,29 @@ export function initTheme(
   }
 }
 
+export function initPageShortcuts(win: Window, doc: Document, base = './'): void {
+  doc.addEventListener('keydown', (evt: KeyboardEvent) => {
+    const tag = (evt.target as HTMLElement)?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (evt.ctrlKey || evt.metaKey || evt.altKey) return;
+
+    switch (evt.key) {
+      case 'k':
+        win.location.href = base;
+        break;
+      case 'h':
+        win.location.href = base + 'kana/';
+        break;
+      case 'd':
+        win.location.href = base + 'draw/';
+        break;
+      case 's':
+        win.location.href = base + 'settings/';
+        break;
+    }
+  });
+}
+
 export function bootstrapKanjiApp(
   allKanji: Kanji[],
   win: Window = window,
@@ -962,20 +985,10 @@ export function bootstrapKanjiApp(
           }
         }
         break;
-      case 'k':
-        win.location.href = './';
-        break;
-      case 'h':
-        win.location.href = './kana/';
-        break;
-      case 'd':
-        win.location.href = './draw/';
-        break;
-      case 's':
-        win.location.href = './settings/';
-        break;
     }
   });
+
+  initPageShortcuts(win, doc);
 
   render(state);
 }

@@ -196,6 +196,29 @@ export function initTheme(win, doc, toggleButton) {
         });
     }
 }
+export function initPageShortcuts(win, doc, base = './') {
+    doc.addEventListener('keydown', (evt) => {
+        const tag = evt.target?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT')
+            return;
+        if (evt.ctrlKey || evt.metaKey || evt.altKey)
+            return;
+        switch (evt.key) {
+            case 'k':
+                win.location.href = base;
+                break;
+            case 'h':
+                win.location.href = base + 'kana/';
+                break;
+            case 'd':
+                win.location.href = base + 'draw/';
+                break;
+            case 's':
+                win.location.href = base + 'settings/';
+                break;
+        }
+    });
+}
 export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     const tts = createTtsApi(win);
     const levelSelect = doc.getElementById('level-select');
@@ -933,19 +956,8 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
                     }
                 }
                 break;
-            case 'k':
-                win.location.href = './';
-                break;
-            case 'h':
-                win.location.href = './kana/';
-                break;
-            case 'd':
-                win.location.href = './draw/';
-                break;
-            case 's':
-                win.location.href = './settings/';
-                break;
         }
     });
+    initPageShortcuts(win, doc);
     render(state);
 }

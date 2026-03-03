@@ -1,5 +1,5 @@
 import type { Kanji } from './types.js';
-import { initTheme } from './shell/appShell.js';
+import { initTheme, initPageShortcuts } from './shell/appShell.js';
 import { loadJlptKanji } from './data/jlptSource.js';
 import { getCachedKanji, setCachedKanji } from './data/kanjiCache.js';
 import { ALL_KANJI as SAMPLE_KANJI } from './core/kanjiData.js';
@@ -247,4 +247,5 @@ function setupDrawing(win: Window, doc: Document): void {
 registerSw(window);
 applyBuildMeta(window, document);
 setupDrawing(window, document);
+initPageShortcuts(window, document, '../');
 
