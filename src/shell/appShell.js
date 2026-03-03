@@ -221,12 +221,10 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
     const toggleReadingsBtn = doc.getElementById('toggle-readings');
     const markKnownBtn = doc.getElementById('mark-known');
     const markUnknownBtn = doc.getElementById('mark-unknown');
-    const nextCardBtn = doc.getElementById('next-card');
     const speakKanjiBtn = doc.getElementById('speak-kanji');
     const speakExampleBtn = doc.getElementById('speak-example');
     const speakExampleEnBtn = doc.getElementById('speak-example-en');
     const writeToggleBtn = doc.getElementById('write-toggle');
-    const writePeekBtn = doc.getElementById('write-peek');
     const writeSection = doc.getElementById('write-section');
     const writeSectionWrapper = doc.getElementById('write-section-wrapper');
     const writeCanvas = doc.getElementById('write-canvas');
@@ -339,11 +337,6 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
         }
         // Buttons
         writeToggleBtn.disabled = !hasKanji;
-        if (writePeekBtn) {
-            writePeekBtn.textContent = peekKanji ? '🙈' : '👁️';
-            writePeekBtn.disabled = !writing;
-            writePeekBtn.hidden = !writing || !hasKanji;
-        }
         if (writeClearBtn) {
             writeClearBtn.disabled = !writing || !hasKanji;
         }
@@ -426,8 +419,6 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
             markKnownBtn.disabled = !hasKanji;
         if (markUnknownBtn)
             markUnknownBtn.disabled = !hasKanji;
-        if (nextCardBtn)
-            nextCardBtn.disabled = !hasKanji;
         if (!tts.available) {
             if (speakKanjiBtn) {
                 speakKanjiBtn.disabled = true;
@@ -657,26 +648,6 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
             render(state);
         });
     }
-    if (nextCardBtn) {
-        nextCardBtn.addEventListener('click', () => {
-            const now = Date.now();
-            const nextIdx = pickNextIndex(state, now);
-            if (nextIdx >= 0) {
-                state = {
-                    ...state,
-                    currentIndex: nextIdx,
-                    revealed: false
-                };
-            }
-            writing = false;
-            peekKanji = false;
-            detailsOpen = false;
-            if (clearWriteCanvas) {
-                clearWriteCanvas();
-            }
-            render(state);
-        });
-    }
     if (speakKanjiBtn && tts.available) {
         speakKanjiBtn.addEventListener('click', () => {
             const { pool, currentIndex } = state;
@@ -874,14 +845,6 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
             updateWritingUi(state);
         });
     }
-    if (writePeekBtn && cardKanji) {
-        writePeekBtn.addEventListener('click', () => {
-            if (!writing)
-                return;
-            peekKanji = !peekKanji;
-            updateWritingUi(state);
-        });
-    }
     // Keyboard shortcuts (desktop convenience)
     doc.addEventListener('keydown', (evt) => {
         // Skip if user is typing in an input/select or modifier keys are held
@@ -909,13 +872,6 @@ export function bootstrapKanjiApp(allKanji, win = window, doc = document) {
                 // Don't know yet
                 if (markUnknownBtn && !markUnknownBtn.disabled) {
                     markUnknownBtn.click();
-                }
-                break;
-            case 'n':
-            case 'N':
-                // Next card
-                if (nextCardBtn && !nextCardBtn.disabled) {
-                    nextCardBtn.click();
                 }
                 break;
         }

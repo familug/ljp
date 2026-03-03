@@ -114,15 +114,6 @@
             >
               ✍️
             </button>
-            <button
-              id="write-peek"
-              class="button button--icon"
-              type="button"
-              aria-label="Peek at kanji"
-              hidden
-            >
-              👁️
-            </button>
           </div>
         </div>
 
@@ -197,11 +188,11 @@
                 ></canvas>
               </div>
               <div class="write-check-row">
+                <span id="write-feedback" class="write-feedback" aria-live="polite"></span>
                 <button id="write-check" class="button button--icon button--primary write-check-btn" type="button"
                   aria-label="Check stroke">
                   🔍
                 </button>
-                <span id="write-feedback" class="write-feedback" aria-live="polite"></span>
               </div>
             </div>
           </div>
@@ -224,10 +215,6 @@
               <span id="stats-known"></span>
               <span id="stats-srs"></span>
             </div>
-            <button id="next-card" class="button button--icon button--ghost" type="button"
-              aria-label="Next card">
-              ⏭
-            </button>
           </div>
         </footer>
       </section>
