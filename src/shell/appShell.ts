@@ -240,6 +240,9 @@ export function initPageShortcuts(win: Window, doc: Document, base = './', langC
       case 'x':
         if (pages.includes('test')) win.location.href = base + 'test/';
         break;
+      case 'f':
+        if (pages.includes('faq')) win.location.href = base + 'faq/';
+        break;
     }
   });
 }
@@ -256,6 +259,7 @@ const ALL_NAV_LINKS: NavLink[] = [
   { href: 'draw/', label: 'Draw kanji', page: 'draw' },
   { href: 'test/', label: 'Test', page: 'test' },
   { href: 'settings/', label: 'Settings', page: 'settings' },
+  { href: 'faq/', label: 'FAQ', page: 'faq' },
 ];
 
 export function buildNavLinks(doc: Document, langConfig: LanguageConfig, base: string, currentPage: string): void {

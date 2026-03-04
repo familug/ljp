@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FAQ – Language Trainer</title>
+    <meta
+      name="description"
+      content="Frequently asked questions about TTS, language settings, and more."
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <meta name="theme-color" content="#0b0f19" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="app-header__titles">
+        <h1 class="app-title">
+          <a href="../" aria-label="Language Trainer home">
+            🧑‍🎓 🇯🇵
+          </a>
+        </h1>
+        <p class="app-subtitle">FAQ</p>
+      </div>
+      <div class="header-controls" aria-label="Display controls">
+        <button
+          id="nav-toggle"
+          class="button button--icon button--ghost app-header__menu"
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+        >
+          ☰
+        </button>
+
+        <button
+          id="lang-toggle"
+          class="button button--ghost"
+          type="button"
+          aria-label="Switch language"
+        ></button>
+
+        <button
+          id="theme-toggle"
+          class="button button--ghost"
+          type="button"
+          aria-label="Toggle dark mode"
+        >
+          🌙
+        </button>
+      </div>
+    </header>
+
+    <nav id="nav-drawer" class="nav-drawer" aria-label="Main navigation">
+      <div class="nav-drawer__panel">
+        <button
+          id="nav-close"
+          class="nav-drawer__close button button--icon button--ghost"
+          type="button"
+          aria-label="Close navigation"
+        >
+          ×
+        </button>
+        <ul class="nav-drawer__list"></ul>
+      </div>
+    </nav>
+
+    <main class="app-main">
+      <section class="app-view" aria-label="FAQ">
+
+        <section class="card">
+          <header class="card__header">
+            <div class="card__level">TTS</div>
+            <div class="card__index">Text-to-Speech</div>
+          </header>
+          <div class="card__body">
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Why can't I hear pronunciation?</h2>
+              </div>
+              <div class="card__section-content">
+                <p>
+                  This app uses your device's built-in text-to-speech (TTS) engine.
+                  If the speak button doesn't produce sound, your device likely
+                  doesn't have a voice installed for the target language.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <header class="card__header">
+            <div class="card__level">Setup</div>
+            <div class="card__index">By platform</div>
+          </header>
+          <div class="card__body">
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Android</h2>
+              </div>
+              <div class="card__section-content">
+                <ol>
+                  <li>Open <strong>Settings</strong> &gt; <strong>System</strong> &gt; <strong>Language &amp; input</strong> &gt; <strong>Text-to-speech output</strong>.</li>
+                  <li>Tap the gear icon next to your TTS engine (usually "Google TTS").</li>
+                  <li>Tap <strong>Install voice data</strong> and download the language you need (e.g. Japanese, French).</li>
+                  <li>Return to the app and tap the speak button again.</li>
+                </ol>
+                <p>
+                  <em>Tip:</em> If you use Samsung, the path may be
+                  <strong>Settings &gt; General management &gt; Language &gt; Text-to-speech</strong>.
+                </p>
+              </div>
+            </div>
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">iPhone / iPad (iOS)</h2>
+              </div>
+              <div class="card__section-content">
+                <ol>
+                  <li>Open <strong>Settings</strong> &gt; <strong>Accessibility</strong> &gt; <strong>Spoken Content</strong>.</li>
+                  <li>Tap <strong>Voices</strong>.</li>
+                  <li>Select the language (e.g. Japanese, French) and download a voice.</li>
+                  <li>Return to Safari and tap the speak button.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Windows</h2>
+              </div>
+              <div class="card__section-content">
+                <ol>
+                  <li>Open <strong>Settings</strong> &gt; <strong>Time &amp; Language</strong> &gt; <strong>Language &amp; region</strong>.</li>
+                  <li>Click <strong>Add a language</strong> and install the language you need.</li>
+                  <li>Make sure to check <strong>Text-to-speech</strong> in the optional features during install.</li>
+                  <li>Restart your browser and try again.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">macOS</h2>
+              </div>
+              <div class="card__section-content">
+                <ol>
+                  <li>Open <strong>System Settings</strong> &gt; <strong>Accessibility</strong> &gt; <strong>Spoken Content</strong>.</li>
+                  <li>Click <strong>System Voice</strong> &gt; <strong>Manage Voices…</strong></li>
+                  <li>Find the language you need and click the download button.</li>
+                  <li>Restart your browser and try again.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Linux (Chrome / Chromium)</h2>
+              </div>
+              <div class="card__section-content">
+                <p>
+                  Chrome on Linux uses the <code>speech-dispatcher</code> backend.
+                  Install additional voices via your package manager:
+                </p>
+                <pre style="margin: 0.5rem 0; padding: 0.5rem; background: var(--bg-alt); border-radius: 0.25rem; overflow-x: auto;"><code># Debian / Ubuntu
+sudo apt install espeak-ng-data
+
+# Fedora
+sudo dnf install espeak-ng
+
+# Arch
+sudo pacman -S espeak-ng</code></pre>
+                <p>Restart Chrome after installing.</p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <section class="card">
+          <header class="card__header">
+            <div class="card__level">General</div>
+            <div class="card__index">Other questions</div>
+          </header>
+          <div class="card__body">
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">How do I switch languages?</h2>
+              </div>
+              <div class="card__section-content">
+                <p>
+                  Tap the flag button in the top-right corner of any page.
+                  The app currently supports Japanese and French.
+                  Your selection is saved and persists across sessions.
+                </p>
+              </div>
+            </div>
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Is my progress saved?</h2>
+              </div>
+              <div class="card__section-content">
+                <p>
+                  Yes. All progress is stored in your browser's local storage.
+                  Each language has its own separate progress, so switching
+                  languages won't affect your other data.
+                </p>
+              </div>
+            </div>
+
+            <div class="card__section">
+              <div class="card__section-header">
+                <h2 class="card__section-title">Does this app work offline?</h2>
+              </div>
+              <div class="card__section-content">
+                <p>
+                  Yes. After the first visit the app is cached by a service worker
+                  and works fully offline. TTS may require an internet connection
+                  on some devices if the voice data isn't downloaded locally.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Built as a static app for GitHub Pages.
+      </p>
+      <p id="build-meta" class="build-meta" aria-label="Build information"></p>
+    </footer>
+
+    <script type="module" src="../src/faqMain.js"></script>
+  </body>
+</html>

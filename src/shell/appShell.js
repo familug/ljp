@@ -227,6 +227,10 @@ export function initPageShortcuts(win, doc, base = './', langConfig) {
                 if (pages.includes('test'))
                     win.location.href = base + 'test/';
                 break;
+            case 'f':
+                if (pages.includes('faq'))
+                    win.location.href = base + 'faq/';
+                break;
         }
     });
 }
@@ -236,6 +240,7 @@ const ALL_NAV_LINKS = [
     { href: 'draw/', label: 'Draw kanji', page: 'draw' },
     { href: 'test/', label: 'Test', page: 'test' },
     { href: 'settings/', label: 'Settings', page: 'settings' },
+    { href: 'faq/', label: 'FAQ', page: 'faq' },
 ];
 export function buildNavLinks(doc, langConfig, base, currentPage) {
     const navList = doc.querySelector('.nav-drawer__list');

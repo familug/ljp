@@ -6,7 +6,7 @@ const JAPANESE = {
     defaultLevel: 'N3',
     ttsLang: 'ja',
     storagePrefix: 'jlpt-kanji',
-    pages: ['trainer', 'kana', 'draw', 'test', 'settings'],
+    pages: ['trainer', 'kana', 'draw', 'test', 'settings', 'faq'],
     questionTypes: ['kanji-to-meaning', 'meaning-to-kanji', 'kanji-to-reading', 'reading-to-kanji'],
     wordLabel: 'kanji',
     subtitle: 'Focused kanji practice with readings, examples, and TTS.'
@@ -19,7 +19,7 @@ const FRENCH = {
     defaultLevel: 'A1',
     ttsLang: 'fr',
     storagePrefix: 'fr-vocab',
-    pages: ['trainer', 'test', 'settings'],
+    pages: ['trainer', 'test', 'settings', 'faq'],
     questionTypes: ['kanji-to-meaning', 'meaning-to-kanji'],
     wordLabel: 'words',
     subtitle: 'French vocabulary practice with meanings and TTS.'
