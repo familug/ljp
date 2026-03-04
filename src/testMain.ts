@@ -259,11 +259,13 @@ function bootstrapTestApp(allKanji: Kanji[], win: Window, doc: Document, langCon
       promptEl.classList.toggle('test-prompt--large', isKanjiPrompt);
     }
 
+    const isKanjiChoices = q.type === 'meaning-to-kanji' || q.type === 'reading-to-kanji';
     for (let i = 0; i < choiceBtns.length; i++) {
       const btn = choiceBtns[i];
       btn.textContent = q.choices[i] ?? '';
       btn.disabled = false;
       btn.classList.remove('test-choice--correct', 'test-choice--wrong');
+      btn.classList.toggle('test-choice--kanji', isKanjiChoices);
       btn.style.display = q.choices[i] != null ? '' : 'none';
     }
   }

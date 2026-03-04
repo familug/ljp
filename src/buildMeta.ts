@@ -1,6 +1,6 @@
 export const BUILD_META = {
-  hash: '0ebd064',
-  datetimeIso: '2026-03-04T12:00:26.000Z'
+  hash: '0b1acb2',
+  datetimeIso: '2026-03-04T15:50:29.000Z'
 };
 
 /** Format build label with datetime in user's local timezone */

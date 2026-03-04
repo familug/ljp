@@ -871,6 +871,11 @@ html[data-theme='light'] .test-choice {
   cursor: default;
 }
 
+.test-choice--kanji {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  line-height: 1.2;
+}
+
 .test-choice--correct {
   background-color: rgba(163, 230, 53, 0.2) !important;
   border-color: var(--color-success) !important;
