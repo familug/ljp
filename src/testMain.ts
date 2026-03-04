@@ -177,9 +177,8 @@ function bootstrapTestApp(allKanji: Kanji[], win: Window, doc: Document): void {
     if (!k) { kanjiDetailEl.classList.remove('test-kanji-detail--visible'); return; }
 
     const parts: string[] = [];
-    parts.push(`<h3 class="test-kanji-detail__title">${k.kanji} — Detail</h3>`);
     if (k.meanings?.length) {
-      parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">Meanings</span><span>${k.meanings.join(', ')}</span></div>`);
+      parts.push(`<div class="test-kanji-detail__row"><span>${k.meanings.join(', ')}</span></div>`);
     }
     if (k.onyomi?.length) {
       parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">On'yomi</span><span>${k.onyomi.join(', ')}</span></div>`);
