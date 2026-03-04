@@ -34,16 +34,17 @@
         </button>
 
         <label class="control control--inline">
-          <span class="control__label control__label--sr-only">JLPT level</span>
-          <select id="level-select" class="control__input" aria-label="Select JLPT level">
-            <option value="N3" selected>N3</option>
-            <option value="N2">N2</option>
-            <option value="N4">N4</option>
-            <option value="N5">N5</option>
-            <option value="N5-N3">N5–N3</option>
-            <option value="ALL">N5–N2</option>
+          <span class="control__label control__label--sr-only">Level</span>
+          <select id="level-select" class="control__input" aria-label="Select level">
           </select>
         </label>
+
+        <button
+          id="lang-toggle"
+          class="button button--ghost"
+          type="button"
+          aria-label="Switch language"
+        ></button>
 
         <button
           id="theme-toggle"

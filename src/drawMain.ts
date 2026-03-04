@@ -1,10 +1,11 @@
 import type { Kanji } from './types.js';
-import { initTheme, initPageShortcuts } from './shell/appShell.js';
+import { initTheme, initPageShortcuts, initLangToggle, buildNavLinks } from './shell/appShell.js';
 import { loadJlptKanji } from './data/jlptSource.js';
 import { getCachedKanji, setCachedKanji } from './data/kanjiCache.js';
 import { ALL_KANJI as SAMPLE_KANJI } from './core/kanjiData.js';
 import { BUILD_META, formatBuildLabel } from './buildMeta.js';
 import { registerSw } from './registerSw.js';
+import { getStoredLanguage, LANGUAGES } from './core/language.js';
 
 function applyBuildMeta(win: Window, doc: Document): void {
   const el = doc.getElementById('build-meta');
@@ -21,6 +22,18 @@ function getContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
 }
 
 function setupDrawing(win: Window, doc: Document): void {
+  const langId = getStoredLanguage(win);
+  const langConfig = LANGUAGES[langId];
+
+  // Redirect to home if this page isn't applicable for the current language
+  if (!langConfig.pages.includes('draw')) {
+    win.location.href = '../';
+    return;
+  }
+
+  initLangToggle(win, doc, langConfig);
+  buildNavLinks(doc, langConfig, '../', 'draw');
+
   const canvas = doc.getElementById('draw-canvas') as HTMLCanvasElement | null;
   const clearBtn = doc.getElementById('draw-clear') as HTMLButtonElement | null;
   const guessBtn = doc.getElementById('draw-guess') as HTMLButtonElement | null;
@@ -137,7 +150,7 @@ function setupDrawing(win: Window, doc: Document): void {
   function formatKanjiEntry(entry: Kanji): string {
     const level = entry.level || '';
     const meanings = (entry.meanings || []).join(', ');
-    return `${entry.kanji} (${level}) – ${meanings}`;
+    return `${entry.kanji} (${level}) \u2013 ${meanings}`;
   }
 
   function recognize() {
@@ -224,7 +237,7 @@ function setupDrawing(win: Window, doc: Document): void {
   }
 
   guessBtn.disabled = true;
-  results!.textContent = 'Loading kanji list…';
+  results!.textContent = 'Loading kanji list\u2026';
 
   loadJlptKanji(['N5', 'N4', 'N3', 'N2'])
     .then((all) => {
@@ -242,10 +255,10 @@ function setupDrawing(win: Window, doc: Document): void {
       results!.textContent =
         'Using built-in sample kanji. Draw a kanji, then tap "Guess kanji".';
     });
+
+  initPageShortcuts(win, doc, '../', langConfig);
 }
 
 registerSw(window);
 applyBuildMeta(window, document);
 setupDrawing(window, document);
-initPageShortcuts(window, document, '../');
-

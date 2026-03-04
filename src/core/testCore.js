@@ -65,13 +65,14 @@ function canGenerateType(type, target, pool) {
     }
     return true;
 }
-function pickValidType(target, pool) {
-    const shuffled = shuffle(QUESTION_TYPES.slice());
+function pickValidType(target, pool, allowedTypes) {
+    const types = allowedTypes && allowedTypes.length ? allowedTypes : QUESTION_TYPES;
+    const shuffled = shuffle(types.slice());
     for (const t of shuffled) {
         if (canGenerateType(t, target, pool))
             return t;
     }
-    return 'kanji-to-meaning';
+    return types[0];
 }
 export function generateQuestion(type, target, levelPool) {
     let distractorPool;
@@ -143,7 +144,7 @@ export function generateQuestion(type, target, levelPool) {
         correctIndex
     };
 }
-export function createTestSession(dueKanji, allKanjiByLevel) {
+export function createTestSession(dueKanji, allKanjiByLevel, allowedTypes) {
     if (dueKanji.length === 0) {
         return {
             phase: 'intro',
@@ -159,7 +160,7 @@ export function createTestSession(dueKanji, allKanjiByLevel) {
     const questions = selected.map((target) => {
         const levelPool = allKanjiByLevel[target.level] ?? allPool;
         const pool = levelPool.length >= CHOICES_PER_QUESTION ? levelPool : allPool;
-        const type = pickValidType(target, pool);
+        const type = pickValidType(target, pool, allowedTypes);
         return generateQuestion(type, target, pool);
     });
     return {

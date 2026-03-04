@@ -86,12 +86,13 @@ function canGenerateType(type: TestQuestionType, target: Kanji, pool: Kanji[]): 
   return true;
 }
 
-function pickValidType(target: Kanji, pool: Kanji[]): TestQuestionType {
-  const shuffled = shuffle(QUESTION_TYPES.slice());
+function pickValidType(target: Kanji, pool: Kanji[], allowedTypes?: TestQuestionType[]): TestQuestionType {
+  const types = allowedTypes && allowedTypes.length ? allowedTypes : QUESTION_TYPES;
+  const shuffled = shuffle(types.slice());
   for (const t of shuffled) {
     if (canGenerateType(t, target, pool)) return t;
   }
-  return 'kanji-to-meaning';
+  return types[0];
 }
 
 export function generateQuestion(
@@ -179,7 +180,8 @@ export function generateQuestion(
 
 export function createTestSession(
   dueKanji: Kanji[],
-  allKanjiByLevel: Record<string, Kanji[]>
+  allKanjiByLevel: Record<string, Kanji[]>,
+  allowedTypes?: TestQuestionType[]
 ): TestState {
   if (dueKanji.length === 0) {
     return {
@@ -198,7 +200,7 @@ export function createTestSession(
   const questions: TestQuestion[] = selected.map((target) => {
     const levelPool = allKanjiByLevel[target.level] ?? allPool;
     const pool = levelPool.length >= CHOICES_PER_QUESTION ? levelPool : allPool;
-    const type = pickValidType(target, pool);
+    const type = pickValidType(target, pool, allowedTypes);
     return generateQuestion(type, target, pool);
   });
 

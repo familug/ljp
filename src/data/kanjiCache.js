@@ -2,12 +2,12 @@
  * In-memory / localStorage cache for the JLPT kanji list so repeat loads are instant.
  * Shell owns storage; this module uses the provided storage interface.
  */
-const CACHE_KEY = 'jlpt-kanji-cache-v1';
-export function getCachedKanji(storage) {
+const DEFAULT_CACHE_KEY = 'jlpt-kanji-cache-v1';
+export function getCachedKanji(storage, cacheKey) {
     if (!storage || typeof storage.getItem !== 'function')
         return null;
     try {
-        const raw = storage.getItem(CACHE_KEY);
+        const raw = storage.getItem(cacheKey ?? DEFAULT_CACHE_KEY);
         if (raw == null || raw === '')
             return null;
         const data = JSON.parse(raw);
@@ -19,13 +19,13 @@ export function getCachedKanji(storage) {
         return null;
     }
 }
-export function setCachedKanji(storage, list) {
+export function setCachedKanji(storage, list, cacheKey) {
     if (!storage || typeof storage.setItem !== 'function')
         return;
     if (!Array.isArray(list))
         return;
     try {
-        storage.setItem(CACHE_KEY, JSON.stringify(list));
+        storage.setItem(cacheKey ?? DEFAULT_CACHE_KEY, JSON.stringify(list));
     }
     catch {
         // quota or disabled; ignore

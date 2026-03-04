@@ -1,4 +1,4 @@
-import { initTheme, initPageShortcuts, createTtsApi } from './shell/appShell.js';
+import { initTheme, initPageShortcuts, createTtsApi, levelsFromSelectValue, initLangToggle, buildNavLinks, populateLevelSelect } from './shell/appShell.js';
 import { loadJlptKanji } from './data/jlptSource.js';
 import { getCachedKanji, setCachedKanji } from './data/kanjiCache.js';
 import { ALL_KANJI as SAMPLE_KANJI } from './core/kanjiData.js';
@@ -6,23 +6,8 @@ import { BUILD_META, formatBuildLabel } from './buildMeta.js';
 import { registerSw } from './registerSw.js';
 import { updateSrsState } from './core/srs.js';
 import { getDueKanji, createTestSession, answerQuestion, nextQuestion, computeScore, getWrongAnswers, testResultsToSrsGrades } from './core/testCore.js';
-const PROGRESS_KEY = 'jlpt-kanji-progress-v1';
-const LEVEL_STORAGE_KEY = 'jlpt-level-choice-v1';
-function levelsFromSelectValue(value) {
-    if (value === 'N5')
-        return ['N5'];
-    if (value === 'N4')
-        return ['N4'];
-    if (value === 'N3')
-        return ['N3'];
-    if (value === 'N2')
-        return ['N2'];
-    if (value === 'N5-N3')
-        return ['N5', 'N4', 'N3'];
-    if (value === 'ALL')
-        return ['N5', 'N4', 'N3', 'N2'];
-    return ['N3'];
-}
+import { getStoredLanguage, LANGUAGES, storageKey } from './core/language.js';
+import { loadFrenchVocab } from './data/frenchSource.js';
 function filterByLevels(kanji, levels) {
     return kanji.filter((k) => levels.includes(k.level));
 }
@@ -55,16 +40,20 @@ function showPhase(doc, phase) {
     if (results)
         results.classList.toggle('app-view--hidden', phase !== 'results');
 }
-function getTypeLabel(type) {
+function getTypeLabel(type, langConfig) {
+    const isFrench = langConfig.id === 'fr';
     switch (type) {
-        case 'kanji-to-meaning': return 'Kanji → Meaning';
-        case 'meaning-to-kanji': return 'Meaning → Kanji';
-        case 'kanji-to-reading': return 'Kanji → Reading';
-        case 'reading-to-kanji': return 'Reading → Kanji';
+        case 'kanji-to-meaning': return isFrench ? 'Word \u2192 Meaning' : 'Kanji \u2192 Meaning';
+        case 'meaning-to-kanji': return isFrench ? 'Meaning \u2192 Word' : 'Meaning \u2192 Kanji';
+        case 'kanji-to-reading': return 'Kanji \u2192 Reading';
+        case 'reading-to-kanji': return 'Reading \u2192 Kanji';
         default: return 'Question';
     }
 }
-function bootstrapTestApp(allKanji, win, doc) {
+function bootstrapTestApp(allKanji, win, doc, langConfig) {
+    const PROGRESS_KEY = storageKey(langConfig, 'progress-v1');
+    const LEVEL_STORAGE_KEY = storageKey(langConfig, 'level-choice-v1');
+    const isFrench = langConfig.id === 'fr';
     const themeToggle = doc.getElementById('theme-toggle');
     const navToggle = doc.getElementById('nav-toggle');
     const navDrawer = doc.getElementById('nav-drawer');
@@ -114,6 +103,9 @@ function bootstrapTestApp(allKanji, win, doc) {
     }
     // Level selector
     const levelSelect = doc.getElementById('test-level-select');
+    // Populate level select dynamically
+    if (levelSelect)
+        populateLevelSelect(levelSelect, langConfig, doc);
     // Restore persisted level
     let storedLevel = null;
     try {
@@ -126,15 +118,16 @@ function bootstrapTestApp(allKanji, win, doc) {
             levelSelect.value = storedLevel;
     }
     function getSelectedLevels() {
-        return levelsFromSelectValue(levelSelect ? levelSelect.value : 'N3');
+        return levelsFromSelectValue(levelSelect ? levelSelect.value : langConfig.defaultLevel, langConfig);
     }
     function filteredKanji() {
         return filterByLevels(allKanji, getSelectedLevels());
     }
+    const allowedTypes = langConfig.questionTypes;
     const nowMs = Date.now();
     let currentFiltered = filteredKanji();
     let dueKanji = getDueKanji(currentFiltered, perKanjiProgress, nowMs);
-    let state = createTestSession(dueKanji, kanjiByLevelMap(currentFiltered));
+    let state = createTestSession(dueKanji, kanjiByLevelMap(currentFiltered), allowedTypes);
     // DOM elements
     const startBtn = doc.getElementById('test-start');
     const dueCountEl = doc.getElementById('test-due-count');
@@ -149,8 +142,8 @@ function bootstrapTestApp(allKanji, win, doc) {
     const reviewList = doc.getElementById('test-review-list');
     const retakeBtn = doc.getElementById('test-retake');
     const kanjiDetailEl = doc.getElementById('test-kanji-detail');
-    const tts = createTtsApi(win);
-    // Build lookup map: kanjiId → Kanji
+    const tts = createTtsApi(win, langConfig);
+    // Build lookup map: kanjiId -> Kanji
     const kanjiById = {};
     for (const k of allKanji)
         kanjiById[k.id] = k;
@@ -170,17 +163,29 @@ function bootstrapTestApp(allKanji, win, doc) {
         if (k.meanings?.length) {
             parts.push(`<div class="test-kanji-detail__row"><span>${k.meanings.join(', ')}</span></div>`);
         }
-        if (k.onyomi?.length) {
-            parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">On'yomi</span><span>${k.onyomi.join(', ')}</span></div>`);
+        if (isFrench) {
+            if (k.kunyomi?.length) {
+                parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">IPA</span><span>/${k.kunyomi.join(', ')}/</span></div>`);
+            }
         }
-        if (k.kunyomi?.length) {
-            parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">Kun'yomi</span><span>${k.kunyomi.join(', ')}</span></div>`);
+        else {
+            if (k.onyomi?.length) {
+                parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">On'yomi</span><span>${k.onyomi.join(', ')}</span></div>`);
+            }
+            if (k.kunyomi?.length) {
+                parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">Kun'yomi</span><span>${k.kunyomi.join(', ')}</span></div>`);
+            }
         }
         if (k.example?.sentence) {
             const speakHtml = tts.available
                 ? `<button type="button" class="button button--ghost button--small test-speak-example" aria-label="Speak example">🔊</button>`
                 : '';
-            parts.push(`<div class="test-kanji-detail__example">${k.example.sentence} ${speakHtml}<br>${k.example.reading}<br>${k.example.translation}</div>`);
+            if (isFrench) {
+                parts.push(`<div class="test-kanji-detail__example">${k.example.sentence} ${speakHtml}<br>${k.example.translation}</div>`);
+            }
+            else {
+                parts.push(`<div class="test-kanji-detail__example">${k.example.sentence} ${speakHtml}<br>${k.example.reading}<br>${k.example.translation}</div>`);
+            }
         }
         kanjiDetailEl.innerHTML = parts.join('');
         // Wire speak button
@@ -196,18 +201,24 @@ function bootstrapTestApp(allKanji, win, doc) {
         kanjiDetailEl.innerHTML = '';
         kanjiDetailEl.classList.remove('test-kanji-detail--visible');
     }
+    // Update intro text based on language
+    const introDesc = doc.querySelector('#test-intro .card__section-content p');
+    if (introDesc && isFrench) {
+        introDesc.innerHTML = 'You\u2019ll be quizzed on <strong>up to 40</strong> SRS-due words with multiple-choice questions covering meanings.';
+    }
     // Intro
     function renderIntro() {
         showPhase(doc, 'intro');
         const qCount = state.questions.length;
+        const wordLabel = langConfig.wordLabel;
         if (dueCountEl) {
             if (qCount === 0) {
-                dueCountEl.textContent = 'No kanji are due for review right now. Come back later!';
+                dueCountEl.textContent = `No ${wordLabel} are due for review right now. Come back later!`;
                 if (startBtn)
                     startBtn.disabled = true;
             }
             else {
-                dueCountEl.textContent = `${dueKanji.length} kanji due · ${qCount} questions`;
+                dueCountEl.textContent = `${dueKanji.length} ${wordLabel} due \u00b7 ${qCount} questions`;
                 if (startBtn)
                     startBtn.disabled = false;
             }
@@ -224,7 +235,7 @@ function bootstrapTestApp(allKanji, win, doc) {
         if (!q)
             return;
         if (qTypeEl)
-            qTypeEl.textContent = getTypeLabel(q.type);
+            qTypeEl.textContent = getTypeLabel(q.type, langConfig);
         if (qProgressEl)
             qProgressEl.textContent = `${state.currentQuestionIndex + 1} / ${state.questions.length}`;
         if (promptEl) {
@@ -298,7 +309,7 @@ function bootstrapTestApp(allKanji, win, doc) {
                     chosen.className = 'test-review-chosen';
                     chosen.textContent = question.choices[answer.chosenIndex];
                     li.appendChild(prompt);
-                    li.appendChild(doc.createTextNode(' → '));
+                    li.appendChild(doc.createTextNode(' \u2192 '));
                     li.appendChild(correct);
                     li.appendChild(doc.createTextNode(' (you: '));
                     li.appendChild(chosen);
@@ -387,7 +398,7 @@ function bootstrapTestApp(allKanji, win, doc) {
             const freshNow = Date.now();
             currentFiltered = filteredKanji();
             const freshDue = getDueKanji(currentFiltered, perKanjiProgress, freshNow);
-            state = createTestSession(freshDue, kanjiByLevelMap(currentFiltered));
+            state = createTestSession(freshDue, kanjiByLevelMap(currentFiltered), allowedTypes);
             state = { ...state, phase: state.questions.length > 0 ? 'question' : 'intro' };
             render();
         });
@@ -400,7 +411,7 @@ function bootstrapTestApp(allKanji, win, doc) {
             catch { /* ignore */ }
             currentFiltered = filteredKanji();
             dueKanji = getDueKanji(currentFiltered, perKanjiProgress, Date.now());
-            state = createTestSession(dueKanji, kanjiByLevelMap(currentFiltered));
+            state = createTestSession(dueKanji, kanjiByLevelMap(currentFiltered), allowedTypes);
             render();
         });
     }
@@ -453,32 +464,48 @@ function showApp(doc) {
 async function start() {
     const win = window;
     const doc = document;
+    const langId = getStoredLanguage(win);
+    const langConfig = LANGUAGES[langId];
+    initLangToggle(win, doc, langConfig);
+    buildNavLinks(doc, langConfig, '../', 'test');
+    // Update subtitle
+    const subtitle = doc.querySelector('.app-subtitle');
+    if (subtitle)
+        subtitle.textContent = langConfig.id === 'fr' ? 'Multiple-choice vocabulary test' : 'Multiple-choice kanji test';
     let storage = null;
     try {
         storage = win.localStorage;
     }
     catch { /* private browsing */ }
-    const cached = getCachedKanji(storage);
+    if (langId === 'fr') {
+        const allFrench = loadFrenchVocab(langConfig.levels);
+        bootstrapTestApp(allFrench, win, doc, langConfig);
+        showApp(doc);
+        return;
+    }
+    // Japanese: cache-first
+    const cacheKey = storageKey(langConfig, 'cache-v1');
+    const cached = getCachedKanji(storage, cacheKey);
     if (cached && cached.length > 0) {
-        bootstrapTestApp(cached, win, doc);
+        bootstrapTestApp(cached, win, doc, langConfig);
         showApp(doc);
         loadJlptKanji(['N5', 'N4', 'N3', 'N2'])
-            .then((fresh) => { setCachedKanji(storage, fresh); })
+            .then((fresh) => { setCachedKanji(storage, fresh, cacheKey); })
             .catch(() => { });
         return;
     }
     try {
         const allKanji = await loadJlptKanji(['N5', 'N4', 'N3', 'N2']);
-        setCachedKanji(storage, allKanji);
-        bootstrapTestApp(allKanji, win, doc);
+        setCachedKanji(storage, allKanji, cacheKey);
+        bootstrapTestApp(allKanji, win, doc, langConfig);
     }
     catch (err) {
         console.error('Failed to load JLPT kanji, using sample data.', err);
-        bootstrapTestApp(SAMPLE_KANJI, win, doc);
+        bootstrapTestApp(SAMPLE_KANJI, win, doc, langConfig);
     }
     showApp(doc);
 }
 registerSw(window);
 applyBuildMeta(window, document);
-initPageShortcuts(window, document, '../');
+initPageShortcuts(window, document, '../', LANGUAGES[getStoredLanguage(window)]);
 start();

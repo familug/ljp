@@ -291,6 +291,60 @@ function testSrsGradesWrongOverridesGood(): void {
   assert.equal(grades[wrongKanjiId], 'again');
 }
 
+// --- French-style tests (empty onyomi, allowedTypes) ---
+
+function makeFrenchWord(id: string, level: string, word: string, meanings: string[]): Kanji {
+  return {
+    id: `${level}-${id}`,
+    level,
+    kanji: word,
+    onyomi: [],
+    kunyomi: ['ipa'],
+    meanings,
+    example: { sentence: '', reading: '', translation: '' }
+  };
+}
+
+const FRENCH_POOL: Kanji[] = [
+  makeFrenchWord('bonjour', 'A1', 'bonjour', ['hello']),
+  makeFrenchWord('merci', 'A1', 'merci', ['thank you']),
+  makeFrenchWord('oui', 'A1', 'oui', ['yes']),
+  makeFrenchWord('non', 'A1', 'non', ['no']),
+  makeFrenchWord('maison', 'A1', 'maison', ['house']),
+  makeFrenchWord('eau', 'A1', 'eau', ['water']),
+  makeFrenchWord('pain', 'A1', 'pain', ['bread']),
+  makeFrenchWord('chat', 'A1', 'chat', ['cat']),
+  makeFrenchWord('chien', 'A1', 'chien', ['dog']),
+  makeFrenchWord('livre', 'A1', 'livre', ['book']),
+];
+
+function testFrenchSessionOnlyMeaningTypes(): void {
+  const allowedTypes: import('../src/types.js').TestQuestionType[] = ['kanji-to-meaning', 'meaning-to-kanji'];
+  const state = createTestSession(FRENCH_POOL, { A1: FRENCH_POOL }, allowedTypes);
+  assert.ok(state.questions.length > 0, 'Should generate questions');
+  for (const q of state.questions) {
+    assert.ok(
+      q.type === 'kanji-to-meaning' || q.type === 'meaning-to-kanji',
+      `Expected word/meaning type, got ${q.type}`
+    );
+  }
+}
+
+function testFrenchSessionNoReadingTypes(): void {
+  const allowedTypes: import('../src/types.js').TestQuestionType[] = ['kanji-to-meaning', 'meaning-to-kanji'];
+  const state = createTestSession(FRENCH_POOL, { A1: FRENCH_POOL }, allowedTypes);
+  for (const q of state.questions) {
+    assert.notEqual(q.type, 'kanji-to-reading', 'Should not have kanji-to-reading');
+    assert.notEqual(q.type, 'reading-to-kanji', 'Should not have reading-to-kanji');
+  }
+}
+
+function testCreateTestSessionWithAllowedTypesBackwardCompat(): void {
+  // Without allowedTypes (undefined), all 4 types should be possible
+  const state = createTestSession(POOL, { N3: POOL.filter((k) => k.level === 'N3'), N2: POOL.filter((k) => k.level === 'N2') });
+  assert.ok(state.questions.length > 0, 'Should generate questions without allowedTypes');
+}
+
 const tests: Array<[string, () => void]> = [
   ['getDueKanji: all new are due', testGetDueKanjiAllNewAreDue],
   ['getDueKanji: filters not-due', testGetDueKanjiFiltersNotDue],
@@ -314,6 +368,9 @@ const tests: Array<[string, () => void]> = [
   ['getWrongAnswers', testGetWrongAnswers],
   ['testResultsToSrsGrades: all correct', testSrsGradesAllCorrect],
   ['testResultsToSrsGrades: wrong overrides good', testSrsGradesWrongOverridesGood],
+  ['French session: only word/meaning types', testFrenchSessionOnlyMeaningTypes],
+  ['French session: no reading types', testFrenchSessionNoReadingTypes],
+  ['createTestSession: allowedTypes backward compat', testCreateTestSessionWithAllowedTypesBackwardCompat],
 ];
 
 let failed = 0;

@@ -9,11 +9,9 @@ import {
 } from '../core/quizCore.js';
 import { updateSrsState, normalizeSrsState } from '../core/srs.js';
 import { scoreStroke } from '../core/strokeScore.js';
+import type { LanguageConfig } from '../core/language.js';
+import { storageKey as langStorageKey, LANGUAGES, nextLanguage, setStoredLanguage } from '../core/language.js';
 
-const PROGRESS_KEY = 'jlpt-kanji-progress-v1';
-const LEVEL_STORAGE_KEY = 'jlpt-level-choice-v1';
-const DAILY_GOAL_KEY = 'jlpt-daily-goal-v1';
-const DAILY_KNOWN_KEY = 'jlpt-daily-known-v1';
 const DEFAULT_DAILY_GOAL = 40;
 
 function getTodayString(): string {
@@ -24,9 +22,10 @@ function getTodayString(): string {
   return `${y}-${m}-${day}`;
 }
 
-export function readDailyGoal(win: Window): number {
+export function readDailyGoal(win: Window, langConfig?: LanguageConfig): number {
+  const key = langConfig ? langStorageKey(langConfig, 'daily-goal-v1') : 'jlpt-daily-goal-v1';
   try {
-    const raw = win.localStorage.getItem(DAILY_GOAL_KEY);
+    const raw = win.localStorage.getItem(key);
     if (raw == null) return DEFAULT_DAILY_GOAL;
     const n = parseInt(raw, 10);
     return Number.isFinite(n) && n >= 1 && n <= 1000 ? n : DEFAULT_DAILY_GOAL;
@@ -35,18 +34,20 @@ export function readDailyGoal(win: Window): number {
   }
 }
 
-export function writeDailyGoal(win: Window, goal: number): void {
+export function writeDailyGoal(win: Window, goal: number, langConfig?: LanguageConfig): void {
+  const key = langConfig ? langStorageKey(langConfig, 'daily-goal-v1') : 'jlpt-daily-goal-v1';
   try {
     const n = Math.max(1, Math.min(1000, Math.floor(goal)));
-    win.localStorage.setItem(DAILY_GOAL_KEY, String(n));
+    win.localStorage.setItem(key, String(n));
   } catch {
     // ignore
   }
 }
 
-function getDailyKnownCount(win: Window): number {
+function getDailyKnownCount(win: Window, langConfig?: LanguageConfig): number {
+  const key = langConfig ? langStorageKey(langConfig, 'daily-known-v1') : 'jlpt-daily-known-v1';
   try {
-    const raw = win.localStorage.getItem(DAILY_KNOWN_KEY);
+    const raw = win.localStorage.getItem(key);
     if (!raw) return 0;
     const data = JSON.parse(raw) as { date?: string; count?: number };
     const today = getTodayString();
@@ -58,10 +59,11 @@ function getDailyKnownCount(win: Window): number {
   }
 }
 
-function incrementDailyKnown(win: Window): void {
+function incrementDailyKnown(win: Window, langConfig?: LanguageConfig): void {
+  const key = langConfig ? langStorageKey(langConfig, 'daily-known-v1') : 'jlpt-daily-known-v1';
   try {
     const today = getTodayString();
-    const raw = win.localStorage.getItem(DAILY_KNOWN_KEY);
+    const raw = win.localStorage.getItem(key);
     let count = 1;
     if (raw) {
       try {
@@ -73,13 +75,13 @@ function incrementDailyKnown(win: Window): void {
         // use 1
       }
     }
-    win.localStorage.setItem(DAILY_KNOWN_KEY, JSON.stringify({ date: today, count }));
+    win.localStorage.setItem(key, JSON.stringify({ date: today, count }));
   } catch {
     // ignore
   }
 }
 
-export function createTtsApi(win: Window) {
+export function createTtsApi(win: Window, langConfig?: LanguageConfig) {
   if (!win || !('speechSynthesis' in win)) {
     return {
       available: false,
@@ -90,54 +92,59 @@ export function createTtsApi(win: Window) {
   }
 
   const synth = win.speechSynthesis;
+  const ttsLang = langConfig?.ttsLang ?? 'ja';
 
-  function pickJapaneseVoice() {
+  function pickVoice(langPrefix: string) {
     const voices = synth.getVoices();
     if (!voices || !voices.length) return null;
-    const ja = voices.find((v: SpeechSynthesisVoice) => v.lang && v.lang.toLowerCase().startsWith('ja'));
-    return ja || voices[0];
+    const match = voices.find((v: SpeechSynthesisVoice) => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
+    return match || voices[0];
   }
 
-  function pickEnglishVoice() {
-    const voices = synth.getVoices();
-    if (!voices || !voices.length) return null;
-    const en = voices.find((v: SpeechSynthesisVoice) => v.lang && v.lang.toLowerCase().startsWith('en'));
-    return en || voices[0];
-  }
-
-  function speakJapanese(text: string) {
+  function speakWithLang(text: string, langPrefix: string, fallbackLang: string) {
     if (!text) return;
     const utterance = new SpeechSynthesisUtterance(text);
-    const voice = pickJapaneseVoice();
+    const voice = pickVoice(langPrefix);
     if (voice) utterance.voice = voice;
-    utterance.lang = (voice && voice.lang) || 'ja-JP';
+    utterance.lang = (voice && voice.lang) || fallbackLang;
     synth.cancel();
     synth.speak(utterance);
+  }
+
+  function speakTarget(text: string) {
+    const fallback = ttsLang === 'fr' ? 'fr-FR' : 'ja-JP';
+    speakWithLang(text, ttsLang, fallback);
   }
 
   function speakEnglish(text: string) {
-    if (!text) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voice = pickEnglishVoice();
-    if (voice) utterance.voice = voice;
-    utterance.lang = (voice && voice.lang) || 'en-US';
-    synth.cancel();
-    synth.speak(utterance);
+    speakWithLang(text, 'en', 'en-US');
   }
+
+  const isFrench = ttsLang === 'fr';
 
   return {
     available: true,
     speakKanji(kanji: Kanji) {
       if (!kanji) return;
-      const primaryReading =
-        (kanji.kunyomi && kanji.kunyomi[0]) ||
-        (kanji.onyomi && kanji.onyomi[0]) ||
-        kanji.kanji;
-      speakJapanese(primaryReading);
+      if (isFrench) {
+        // For French, speak the word itself
+        speakTarget(kanji.kanji);
+      } else {
+        // For Japanese, speak the primary reading
+        const primaryReading =
+          (kanji.kunyomi && kanji.kunyomi[0]) ||
+          (kanji.onyomi && kanji.onyomi[0]) ||
+          kanji.kanji;
+        speakTarget(primaryReading);
+      }
     },
     speakExample(kanji: Kanji) {
       if (!kanji || !kanji.example) return;
-      speakJapanese(kanji.example.sentence || kanji.example.reading);
+      if (isFrench) {
+        speakTarget(kanji.example.sentence);
+      } else {
+        speakTarget(kanji.example.sentence || kanji.example.reading);
+      }
     },
     speakExampleTranslation(kanji: Kanji) {
       if (!kanji || !kanji.example) return;
@@ -146,14 +153,15 @@ export function createTtsApi(win: Window) {
   };
 }
 
-function levelsFromSelectValue(value: string): string[] {
-  if (value === 'N5') return ['N5'];
-  if (value === 'N4') return ['N4'];
-  if (value === 'N3') return ['N3'];
-  if (value === 'N2') return ['N2'];
+export function levelsFromSelectValue(value: string, langConfig?: LanguageConfig): string[] {
+  const levels = langConfig?.levels ?? LANGUAGES.ja.levels;
+  // Single level
+  if (levels.includes(value)) return [value];
+  // Combined values
   if (value === 'N5-N3') return ['N5', 'N4', 'N3'];
-  if (value === 'ALL') return ['N5', 'N4', 'N3', 'N2'];
-  return ['N3'];
+  if (value === 'ALL') return levels.slice();
+  // Default to first level
+  return [langConfig?.defaultLevel ?? levels[0]];
 }
 
 export function initTheme(
@@ -209,7 +217,8 @@ export function initTheme(
   }
 }
 
-export function initPageShortcuts(win: Window, doc: Document, base = './'): void {
+export function initPageShortcuts(win: Window, doc: Document, base = './', langConfig?: LanguageConfig): void {
+  const pages = langConfig?.pages ?? ['trainer', 'kana', 'draw', 'test', 'settings'];
   doc.addEventListener('keydown', (evt: KeyboardEvent) => {
     const tag = (evt.target as HTMLElement)?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
@@ -217,30 +226,105 @@ export function initPageShortcuts(win: Window, doc: Document, base = './'): void
 
     switch (evt.key) {
       case 'k':
-        win.location.href = base;
+        if (pages.includes('trainer')) win.location.href = base;
         break;
       case 'h':
-        win.location.href = base + 'kana/';
+        if (pages.includes('kana')) win.location.href = base + 'kana/';
         break;
       case 'd':
-        win.location.href = base + 'draw/';
+        if (pages.includes('draw')) win.location.href = base + 'draw/';
         break;
       case 's':
-        win.location.href = base + 'settings/';
+        if (pages.includes('settings')) win.location.href = base + 'settings/';
         break;
       case 'x':
-        win.location.href = base + 'test/';
+        if (pages.includes('test')) win.location.href = base + 'test/';
         break;
     }
+  });
+}
+
+interface NavLink {
+  href: string;
+  label: string;
+  page: string;
+}
+
+const ALL_NAV_LINKS: NavLink[] = [
+  { href: '', label: 'Trainer', page: 'trainer' },
+  { href: 'kana/', label: 'Kana basics', page: 'kana' },
+  { href: 'draw/', label: 'Draw kanji', page: 'draw' },
+  { href: 'test/', label: 'Test', page: 'test' },
+  { href: 'settings/', label: 'Settings', page: 'settings' },
+];
+
+export function buildNavLinks(doc: Document, langConfig: LanguageConfig, base: string, currentPage: string): void {
+  const navList = doc.querySelector('.nav-drawer__list');
+  if (!navList) return;
+  navList.innerHTML = '';
+  const pages = langConfig.pages;
+  for (const link of ALL_NAV_LINKS) {
+    if (!pages.includes(link.page)) continue;
+    const li = doc.createElement('li');
+    const a = doc.createElement('a');
+    a.href = base + link.href;
+    a.className = 'nav-drawer__link';
+    a.textContent = link.label;
+    if (link.page === currentPage) {
+      a.setAttribute('aria-current', 'page');
+    }
+    li.appendChild(a);
+    navList.appendChild(li);
+  }
+}
+
+export function populateLevelSelect(select: HTMLSelectElement, langConfig: LanguageConfig, doc: Document): void {
+  select.innerHTML = '';
+  for (const level of langConfig.levels) {
+    const opt = doc.createElement('option');
+    opt.value = level;
+    opt.textContent = level;
+    select.appendChild(opt);
+  }
+  // Add combined option for Japanese
+  if (langConfig.id === 'ja') {
+    const combinedOpt = doc.createElement('option');
+    combinedOpt.value = 'N5-N3';
+    combinedOpt.textContent = 'N5\u2013N3';
+    select.appendChild(combinedOpt);
+  }
+  // Add "All" option
+  const allOpt = doc.createElement('option');
+  allOpt.value = 'ALL';
+  allOpt.textContent = langConfig.id === 'ja' ? 'N5\u2013N2' : `${langConfig.levels[0]}\u2013${langConfig.levels[langConfig.levels.length - 1]}`;
+  select.appendChild(allOpt);
+  select.value = langConfig.defaultLevel;
+}
+
+export function initLangToggle(win: Window, doc: Document, langConfig: LanguageConfig): void {
+  const btn = doc.getElementById('lang-toggle');
+  if (!btn) return;
+  btn.textContent = langConfig.flag;
+  btn.title = `Switch language (current: ${langConfig.label})`;
+  btn.addEventListener('click', () => {
+    const next = nextLanguage(langConfig.id);
+    setStoredLanguage(win, next);
+    win.location.reload();
   });
 }
 
 export function bootstrapKanjiApp(
   allKanji: Kanji[],
   win: Window = window,
-  doc: Document = document
+  doc: Document = document,
+  langConfig?: LanguageConfig
 ): void {
-  const tts = createTtsApi(win);
+  const effectiveLangConfig = langConfig ?? LANGUAGES.ja;
+  const PROGRESS_KEY = langStorageKey(effectiveLangConfig, 'progress-v1');
+  const LEVEL_STORAGE_KEY = langStorageKey(effectiveLangConfig, 'level-choice-v1');
+  const isFrench = effectiveLangConfig.id === 'fr';
+
+  const tts = createTtsApi(win, effectiveLangConfig);
 
   const levelSelect = doc.getElementById('level-select') as HTMLSelectElement | null;
   const themeToggle = doc.getElementById('theme-toggle');
@@ -282,6 +366,12 @@ export function bootstrapKanjiApp(
   const writeFeedback = doc.getElementById('write-feedback') as HTMLElement | null;
 
   initTheme(win, doc, themeToggle);
+
+  // Hide write section for non-Japanese languages
+  if (isFrench) {
+    if (writeToggleBtn) writeToggleBtn.style.display = 'none';
+    if (writeSectionWrapper) writeSectionWrapper.style.display = 'none';
+  }
 
   function openNav() {
     if (!navDrawer || !navToggle) return;
@@ -330,7 +420,7 @@ export function bootstrapKanjiApp(
     levelSelect.value = initialSelectValue;
   }
 
-  const initialLevels = levelsFromSelectValue(initialSelectValue);
+  const initialLevels = levelsFromSelectValue(initialSelectValue, effectiveLangConfig);
   let state: QuizState = createSession(allKanji, { levels: initialLevels });
   let perKanjiProgress: Record<string, Record<string, unknown>> = {};
 
@@ -535,11 +625,17 @@ export function bootstrapKanjiApp(
     if (cardKanji) cardKanji.textContent = kanji.kanji || '';
 
     const readingsPieces = [];
-    if (kanji.onyomi && kanji.onyomi.length) {
-      readingsPieces.push(`音: ${kanji.onyomi.join('、 ')}`);
-    }
-    if (kanji.kunyomi && kanji.kunyomi.length) {
-      readingsPieces.push(`訓: ${kanji.kunyomi.join('、 ')}`);
+    if (isFrench) {
+      if (kanji.kunyomi && kanji.kunyomi.length) {
+        readingsPieces.push(`/${kanji.kunyomi.join(', ')}/`);
+      }
+    } else {
+      if (kanji.onyomi && kanji.onyomi.length) {
+        readingsPieces.push(`音: ${kanji.onyomi.join('、 ')}`);
+      }
+      if (kanji.kunyomi && kanji.kunyomi.length) {
+        readingsPieces.push(`訓: ${kanji.kunyomi.join('、 ')}`);
+      }
     }
     if (cardReadings) cardReadings.textContent = readingsPieces.join('　');
 
@@ -570,8 +666,8 @@ export function bootstrapKanjiApp(
     const accuracy = getAccuracy(currentState);
     if (statsSeen) statsSeen.textContent = `Seen: ${currentState.stats.seen}`;
     if (statsKnown) statsKnown.textContent = `Known: ${currentState.stats.known} (${accuracy.toFixed(0)}%)`;
-    const dailyGoal = readDailyGoal(win);
-    const dailyCount = getDailyKnownCount(win);
+    const dailyGoal = readDailyGoal(win, effectiveLangConfig);
+    const dailyCount = getDailyKnownCount(win, effectiveLangConfig);
     if (statsToday) statsToday.textContent = `Today: ${dailyCount} / ${dailyGoal}`;
 
     if (statsSrs) {
@@ -595,7 +691,7 @@ export function bootstrapKanjiApp(
 
   if (levelSelect) {
     levelSelect.addEventListener('change', () => {
-      const levels = levelsFromSelectValue(levelSelect.value);
+      const levels = levelsFromSelectValue(levelSelect.value, effectiveLangConfig);
       state = setLevels(state, allKanji, levels);
       detailsOpen = false;
       render(state);
@@ -615,7 +711,7 @@ export function bootstrapKanjiApp(
       const answered = getCurrentKanji(state);
       const now = Date.now();
       state = markKnown(state);
-      incrementDailyKnown(win);
+      incrementDailyKnown(win, effectiveLangConfig);
       if (answered && answered.id) {
         const prev = perKanjiProgress[answered.id] || {};
         const srsNext = updateSrsState(prev as Partial<import('../types.js').SrsState>, 'good', now);
@@ -991,7 +1087,7 @@ export function bootstrapKanjiApp(
     }
   });
 
-  initPageShortcuts(win, doc);
+  initPageShortcuts(win, doc, './', effectiveLangConfig);
 
   render(state);
 }

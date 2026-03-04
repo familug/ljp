@@ -1,6 +1,7 @@
-import { initTheme, initPageShortcuts, readDailyGoal, writeDailyGoal } from './shell/appShell.js';
+import { initTheme, initPageShortcuts, readDailyGoal, writeDailyGoal, initLangToggle, buildNavLinks } from './shell/appShell.js';
 import { BUILD_META, formatBuildLabel } from './buildMeta.js';
 import { registerSw } from './registerSw.js';
+import { getStoredLanguage, LANGUAGES } from './core/language.js';
 function applyBuildMeta(win, doc) {
     const el = doc.getElementById('build-meta');
     if (!el || !BUILD_META)
@@ -8,6 +9,10 @@ function applyBuildMeta(win, doc) {
     el.textContent = formatBuildLabel(BUILD_META.hash, BUILD_META.datetimeIso);
 }
 function initSettingsPage(win, doc) {
+    const langId = getStoredLanguage(win);
+    const langConfig = LANGUAGES[langId];
+    initLangToggle(win, doc, langConfig);
+    buildNavLinks(doc, langConfig, '../', 'settings');
     const themeToggle = doc.getElementById('theme-toggle');
     const navToggle = doc.getElementById('nav-toggle');
     const navDrawer = doc.getElementById('nav-drawer');
@@ -44,12 +49,12 @@ function initSettingsPage(win, doc) {
         navClose.addEventListener('click', closeNav);
     }
     if (dailyGoalInput) {
-        dailyGoalInput.value = String(readDailyGoal(win));
+        dailyGoalInput.value = String(readDailyGoal(win, langConfig));
         dailyGoalInput.addEventListener('change', () => {
             const raw = parseInt(dailyGoalInput.value, 10);
             const n = Number.isFinite(raw) ? Math.max(1, Math.min(1000, Math.floor(raw))) : 40;
             dailyGoalInput.value = String(n);
-            writeDailyGoal(win, n);
+            writeDailyGoal(win, n, langConfig);
             if (savedMessage) {
                 savedMessage.style.display = '';
                 savedMessage.textContent = 'Saved.';
@@ -63,12 +68,12 @@ function initSettingsPage(win, doc) {
             const n = Number.isFinite(raw) ? Math.max(1, Math.min(1000, Math.floor(raw))) : 40;
             if (Number(dailyGoalInput.value) !== n) {
                 dailyGoalInput.value = String(n);
-                writeDailyGoal(win, n);
+                writeDailyGoal(win, n, langConfig);
             }
         });
     }
+    initPageShortcuts(win, doc, '../', langConfig);
 }
 registerSw(window);
 applyBuildMeta(window, document);
 initSettingsPage(window, document);
-initPageShortcuts(window, document, '../');
