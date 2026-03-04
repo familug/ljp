@@ -1,5 +1,5 @@
 import type { Kanji, SrsState, TestState } from './types.js';
-import { initTheme, initPageShortcuts } from './shell/appShell.js';
+import { initTheme, initPageShortcuts, createTtsApi } from './shell/appShell.js';
 import { loadJlptKanji } from './data/jlptSource.js';
 import { getCachedKanji, setCachedKanji } from './data/kanjiCache.js';
 import { ALL_KANJI as SAMPLE_KANJI } from './core/kanjiData.js';
@@ -160,6 +160,7 @@ function bootstrapTestApp(allKanji: Kanji[], win: Window, doc: Document): void {
   const retakeBtn = doc.getElementById('test-retake') as HTMLButtonElement | null;
 
   const kanjiDetailEl = doc.getElementById('test-kanji-detail');
+  const tts = createTtsApi(win);
 
   // Build lookup map: kanjiId → Kanji
   const kanjiById: Record<string, Kanji> = {};
@@ -187,9 +188,19 @@ function bootstrapTestApp(allKanji: Kanji[], win: Window, doc: Document): void {
       parts.push(`<div class="test-kanji-detail__row"><span class="test-kanji-detail__label">Kun'yomi</span><span>${k.kunyomi.join(', ')}</span></div>`);
     }
     if (k.example?.sentence) {
-      parts.push(`<div class="test-kanji-detail__example">${k.example.sentence}<br>${k.example.reading}<br>${k.example.translation}</div>`);
+      const speakHtml = tts.available
+        ? `<button type="button" class="button button--ghost button--small test-speak-example" aria-label="Speak example">🔊</button>`
+        : '';
+      parts.push(`<div class="test-kanji-detail__example">${k.example.sentence} ${speakHtml}<br>${k.example.reading}<br>${k.example.translation}</div>`);
     }
     kanjiDetailEl.innerHTML = parts.join('');
+
+    // Wire speak button
+    const speakBtn = kanjiDetailEl.querySelector('.test-speak-example') as HTMLButtonElement | null;
+    if (speakBtn) {
+      speakBtn.addEventListener('click', () => tts.speakExample(k));
+    }
+
     kanjiDetailEl.classList.add('test-kanji-detail--visible');
   }
 

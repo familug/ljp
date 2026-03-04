@@ -790,23 +790,28 @@ html[data-theme='light'] .button--icon {
 
 @media (max-width: 640px) {
   .app-main {
-    padding-bottom: 4.5rem;
+    padding-bottom: 5rem;
   }
 
+  #mark-unknown,
   #mark-known {
     position: fixed;
-    right: 1rem;
-    bottom: 1rem;
+    bottom: 0;
     z-index: 40;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+    width: 50%;
+    height: 4rem;
+    border-radius: 0;
+    font-size: 1.5rem;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3);
   }
 
   #mark-unknown {
-    position: fixed;
-    left: 1rem;
-    bottom: 1rem;
-    z-index: 40;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+    left: 0;
+    border-right: 1px solid var(--color-border-subtle);
+  }
+
+  #mark-known {
+    right: 0;
   }
 }
 

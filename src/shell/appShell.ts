@@ -79,7 +79,7 @@ function incrementDailyKnown(win: Window): void {
   }
 }
 
-function createTtsApi(win: Window) {
+export function createTtsApi(win: Window) {
   if (!win || !('speechSynthesis' in win)) {
     return {
       available: false,

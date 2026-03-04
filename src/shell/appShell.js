@@ -72,7 +72,7 @@ function incrementDailyKnown(win) {
         // ignore
     }
 }
-function createTtsApi(win) {
+export function createTtsApi(win) {
     if (!win || !('speechSynthesis' in win)) {
         return {
             available: false,
